@@ -14,9 +14,9 @@ import com.example.crossclock.data.WorldClockViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WorldClockSelectPage(viewModel: WorldClockViewModel = ,changeStatus: () -> Unit){
+//fun WorldClockSelectPage(viewModel: WorldClockViewModel = ,changeStatus: () -> Unit){
 //Before change 1
-//fun WorldClockSelectPage(homepageList: MutableList<WorldClock>, changeStatus: () -> Unit){
+fun WorldClockSelectPage(homepageList: MutableList<WorldClock>, changeStatus: () -> Unit){
     ModalBottomSheet(
         onDismissRequest = { changeStatus() }
     ) {

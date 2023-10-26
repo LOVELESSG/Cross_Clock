@@ -11,19 +11,19 @@ import kotlinx.coroutines.flow.*
 interface WorldClockDao {
 
     @Insert
-    fun insertWorldClock(worldClock: WorldClock): Long
+    suspend fun insertWorldClock(worldClock: WorldClock): Long
 
     @Update
-    fun updateWorldClock(worldClock: WorldClock)
+    suspend fun updateWorldClock(worldClock: WorldClock)
 
     @Query("select * from WorldClock")
     fun loadAllWorldClock(): Flow<List<WorldClock>>
 
     @Delete
-    fun deleteWorldClock(worldClock: WorldClock)
+    suspend fun deleteWorldClock(worldClock: WorldClock)
 
     @Query("delete from WorldClock where city = :cityName")
-    fun deleteWorldClockByCityName(cityName: String): Int
+    fun deleteWorldClockByCityName(cityName: String)
 
     @Query("select exists(select 1 from WorldClock where city = :cityName)")
     fun existsWorldClock(cityName: String): Boolean
