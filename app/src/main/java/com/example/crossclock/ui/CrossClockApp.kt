@@ -1,5 +1,6 @@
 package com.example.crossclock.ui
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,8 +35,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,7 +48,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.crossclock.data.WorldClock
+import com.example.crossclock.data.WorldClockViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -67,10 +70,11 @@ fun CrossClockApp() {
     val selectedItem = remember {
         mutableStateOf(items[0])
     }
-    val homepageList = remember {
-        mutableStateListOf<WorldClock>()
-    }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    val worldClockViewModel = viewModel(modelClass = WorldClockViewModel::class.java)
+    val worldClockState = worldClockViewModel.state
+    val homepageList = worldClockState.items
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -124,7 +128,13 @@ fun CrossClockApp() {
         ) { padding ->
             WorldClockContent(homepageList, padding)
             if (openBottomSheet) {
-                WorldClockSelectPage(homepageList, changeStatus = {openBottomSheet = !openBottomSheet})
+                WorldClockSelectPage(
+                    worldClockViewModel.state,
+                    changeStatus = { openBottomSheet = !openBottomSheet },
+                    addWorldClock = worldClockViewModel::addWorldClock,
+                    removeWorldClockByName = worldClockViewModel::deleteWorldClockByName,
+                    isChecked = worldClockViewModel::existWorldClock
+                )
             }
         }
     }
@@ -138,7 +148,10 @@ fun CrossClockApp() {
 }
 
 @Composable
-fun WorldClockContent(homepageList: MutableList<WorldClock>, padding: PaddingValues) {
+fun WorldClockContent(
+    homepageList: List<WorldClock>,
+    padding: PaddingValues
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()

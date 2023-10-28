@@ -23,8 +23,8 @@ interface WorldClockDao {
     suspend fun deleteWorldClock(worldClock: WorldClock)
 
     @Query("delete from WorldClock where city = :cityName")
-    fun deleteWorldClockByCityName(cityName: String)
+    suspend fun deleteWorldClockByCityName(cityName: String)
 
     @Query("select exists(select 1 from WorldClock where city = :cityName)")
-    fun existsWorldClock(cityName: String): Boolean
+    fun existsWorldClock(cityName: String): Flow<Boolean>
 }

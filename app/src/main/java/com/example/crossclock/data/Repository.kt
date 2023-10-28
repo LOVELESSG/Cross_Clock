@@ -16,11 +16,10 @@ class Repository(
         worldClockDao.deleteWorldClock(worldClock)
     }
 
-    fun deleteWorldClockByName(cityName: String) {
+    suspend fun deleteWorldClockByName(cityName: String) {
         worldClockDao.deleteWorldClockByCityName(cityName)
     }
 
-    fun existWorldClock(cityName: String){
-        worldClockDao.existsWorldClock(cityName)
-    }
+    fun existsWorldClock(cityName: String) = worldClockDao.existsWorldClock(cityName)
+
 }
