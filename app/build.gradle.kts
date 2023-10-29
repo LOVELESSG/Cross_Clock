@@ -80,37 +80,40 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.44")
     ksp("com.google.dagger:hilt-android-compiler:2.44")
 
-    val lifecycle_version = "2.6.2"
-    val arch_version = "2.2.0"
+    val lifecycleVersion = "2.6.2"
+    val archVersion = "2.2.0"
 
     // ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
     // ViewModel utilities for Compose
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
     // LiveData
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycleVersion")
     // Lifecycles only (without ViewModel or LiveData)
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
 
     // Saved state module for ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycleVersion")
 
     // Annotation processor
-    ksp("androidx.lifecycle:lifecycle-compiler:$lifecycle_version")
+    ksp("androidx.lifecycle:lifecycle-compiler:$lifecycleVersion")
 
     // optional - helpers for implementing LifecycleOwner in a Service
-    implementation("androidx.lifecycle:lifecycle-service:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-service:$lifecycleVersion")
 
     // optional - ProcessLifecycleOwner provides a lifecycle for the whole application process
-    implementation("androidx.lifecycle:lifecycle-process:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-process:$lifecycleVersion")
 
     // optional - ReactiveStreams support for LiveData
-    implementation("androidx.lifecycle:lifecycle-reactivestreams-ktx:$lifecycle_version")
+    implementation("androidx.lifecycle:lifecycle-reactivestreams-ktx:$lifecycleVersion")
 
     // optional - Test helpers for LiveData
-    testImplementation("androidx.arch.core:core-testing:$arch_version")
+    testImplementation("androidx.arch.core:core-testing:$archVersion")
 
     // optional - Test helpers for Lifecycle runtime
-    testImplementation ("androidx.lifecycle:lifecycle-runtime-testing:$lifecycle_version")
+    testImplementation ("androidx.lifecycle:lifecycle-runtime-testing:$lifecycleVersion")
+
+    // Add support for navigation
+    implementation("androidx.navigation:navigation-compose:2.7.4")
 
 }

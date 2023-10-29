@@ -1,6 +1,7 @@
-package com.example.crossclock
+package com.example.crossclock.ui
 
 import android.app.Application
+import com.example.crossclock.Graph
 
 class CrossClockApplication: Application() {
     override fun onCreate() {

@@ -49,6 +49,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.crossclock.data.DRAWER_ITEMS
 import com.example.crossclock.data.WorldClock
 import com.example.crossclock.data.WorldClockViewModel
 import kotlinx.coroutines.delay
@@ -60,16 +62,17 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CrossClockApp() {
+fun CrossClockApp(
+    navController: NavController
+) {
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     var openBottomSheet by rememberSaveable {
         mutableStateOf(false)
     }
 
-    val items = listOf(Icons.Default.Favorite, Icons.Default.Face, Icons.Default.Email)
     val selectedItem = remember {
-        mutableStateOf(items[0])
+        mutableStateOf(DRAWER_ITEMS[0])
     }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -87,14 +90,15 @@ fun CrossClockApp() {
             ) {
                 Text(text = "World Clock side")
                 Spacer(modifier = Modifier.height(12.dp))
-                items.forEach {item ->
+                DRAWER_ITEMS.forEach {item ->
                     NavigationDrawerItem(
-                        icon = { Icon(imageVector = item, contentDescription = null)},
+                        icon = { Icon(imageVector = item.icon, contentDescription = null)},
                         label = { Text(text = (item.name)) },
                         selected = item == selectedItem.value,
                         onClick = {
                             scope.launch { drawerState.close() }
                             selectedItem.value = item
+                            navController.navigate(route = item.route)
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
                     )
@@ -171,7 +175,6 @@ fun WorldClockContent(
                         currentTime = LocalTime.now(item.cityTimeZoneId)
                             .format(DateTimeFormatter.ofPattern("HH:mm"))
                         delay(1000)
-                        Log.d("in the while:", "in the while")
                     }
                 }
                 ListItem(
@@ -183,7 +186,6 @@ fun WorldClockContent(
                         text = currentTime,
                         fontSize = 45.sp
                     )
-                        Log.d("in the while: ", "compose happen")
                     }
                 )
                 HorizontalDivider(modifier = Modifier.padding(16.dp, 4.dp, 16.dp, 8.dp))
