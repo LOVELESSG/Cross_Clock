@@ -35,7 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.crossclock.data.WorldClock
 import com.example.crossclock.data.WorldClockViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -161,16 +162,28 @@ fun WorldClockContent(
         // should read the list from database
         LazyColumn{
             itemsIndexed(homepageList) { _, item ->
+                var currentTime by remember {
+                    mutableStateOf(LocalTime.now(item.cityTimeZoneId)
+                        .format(DateTimeFormatter.ofPattern("HH:mm")))
+                }
+                LaunchedEffect(key1 = true) {
+                    while (true) {
+                        currentTime = LocalTime.now(item.cityTimeZoneId)
+                            .format(DateTimeFormatter.ofPattern("HH:mm"))
+                        delay(1000)
+                        Log.d("in the while:", "in the while")
+                    }
+                }
                 ListItem(
                     headlineContent = { Text(text = item.city, fontWeight = FontWeight.Bold) },
                     supportingContent = { Text(
                         text = LocalDate.now(item.cityTimeZoneId)
                             .format(DateTimeFormatter.ISO_DATE)) },
                     trailingContent = { Text(
-                        text = LocalTime.now(item.cityTimeZoneId)
-                            .format(DateTimeFormatter.ofPattern("HH:mm")),
+                        text = currentTime,
                         fontSize = 45.sp
                     )
+                        Log.d("in the while: ", "compose happen")
                     }
                 )
                 HorizontalDivider(modifier = Modifier.padding(16.dp, 4.dp, 16.dp, 8.dp))
