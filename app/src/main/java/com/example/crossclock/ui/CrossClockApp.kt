@@ -70,7 +70,6 @@ fun CrossClockApp(
     var openBottomSheet by rememberSaveable {
         mutableStateOf(false)
     }
-
     val selectedItem = remember {
         mutableStateOf(DRAWER_ITEMS[0])
     }
