@@ -1,5 +1,8 @@
 package com.example.crossclock.data
 
+import com.example.crossclock.data.worldclock.WorldClock
+import com.example.crossclock.data.worldclock.WorldClockDao
+
 class Repository(
     private val worldClockDao: WorldClockDao
 ) {

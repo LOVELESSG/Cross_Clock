@@ -10,7 +10,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import com.example.crossclock.data.WorldClock
+import com.example.crossclock.data.worldclock.WorldClock
 import com.example.crossclock.data.WorldClockState
 import kotlinx.coroutines.flow.Flow
 

@@ -1,4 +1,4 @@
-package com.example.crossclock.data
+package com.example.crossclock.data.worldclock
 
 import androidx.room.Dao
 import androidx.room.Delete
