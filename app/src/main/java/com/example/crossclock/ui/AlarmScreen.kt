@@ -1,7 +1,9 @@
 package com.example.crossclock.ui
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -15,10 +17,12 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
-import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissValue
+import androidx.compose.material3.DismissDirection.*
+import androidx.compose.material3.DismissValue.*
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -32,7 +36,6 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -40,36 +43,29 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.crossclock.data.DRAWER_ITEMS
 import com.example.crossclock.data.alarm.Alarm
-import com.example.crossclock.data.worldclock.WorldClock
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -151,7 +147,7 @@ fun AlarmScreen(navController: NavController){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmContent(
-    alarmList: List<Alarm>,
+    alarmList: MutableList<Alarm>,
     padding: PaddingValues
 ) {
 
@@ -162,27 +158,56 @@ fun AlarmContent(
         contentAlignment = Alignment.TopStart
     ) {
         LazyColumn{
-            itemsIndexed(sampleAlarm) { _, item ->
-                //Log.d("list1:", alarmList.size.toString())
+            itemsIndexed(alarmList) { index, item ->
                 var checked by remember {
                     mutableStateOf(true)
                 }
                 val dismissState = rememberDismissState(
                     confirmValueChange = {
-                        if (it == DismissValue.DismissedToEnd) {
-                            sampleAlarm.remove(item)
+                        if (it == DismissedToStart) {
+                            alarmList.removeAt(index)
                         }
-                        true
+                        it != DismissedToStart
                     }
                 )
                 SwipeToDismiss(
                     state = dismissState,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    directions = setOf(StartToEnd, EndToStart),
                     background = {
-                                 val color = when(dismissState.dismissDirection){
-                                     DismissDirection.EndToStart -> Color.Red
-                                     DismissDirection.StartToEnd -> Color.Blue
-                                     null -> Color.Magenta
-                                 }
+                        val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+                        val color by animateColorAsState(
+                            when (dismissState.targetValue) {
+                                Default -> Color.LightGray
+                                DismissedToEnd -> Color.Green
+                                DismissedToStart -> Color.Red
+                            }, label = ""
+                        )
+                        val alignment = when (direction) {
+                            StartToEnd -> Alignment.CenterStart
+                            EndToStart -> Alignment.CenterEnd
+                        }
+                        val icon = when (direction) {
+                            StartToEnd -> Icons.Default.Done
+                            EndToStart -> Icons.Default.Delete
+                        }
+                        val scale by animateFloatAsState(
+                            if (dismissState.targetValue == Default) 0.75f else 1f, label = ""
+                        )
+
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(color)
+                                .padding(horizontal = 20.dp),
+                            contentAlignment = alignment
+                        ) {
+                            Icon(
+                                icon,
+                                contentDescription = "Localized description",
+                                modifier = Modifier.scale(scale)
+                            )
+                        }
                     },
                     dismissContent = {
                         ListItem(
@@ -198,6 +223,7 @@ fun AlarmContent(
         }
     }
 }
+
 
 @Composable
 fun AddAlarm(){
