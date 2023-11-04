@@ -14,7 +14,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Button
+import androidx.compose.material3.DismissDirection
 import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,7 +41,9 @@ import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,12 +57,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.crossclock.data.DRAWER_ITEMS
 import com.example.crossclock.data.alarm.Alarm
 import com.example.crossclock.data.worldclock.WorldClock
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -146,9 +154,7 @@ fun AlarmContent(
     alarmList: List<Alarm>,
     padding: PaddingValues
 ) {
-    var checked by remember {
-        mutableStateOf(true)
-    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -156,31 +162,26 @@ fun AlarmContent(
         contentAlignment = Alignment.TopStart
     ) {
         LazyColumn{
-            itemsIndexed(alarmList) { index, item ->
-                /*ListItem(
-                    headlineContent = { Text(text = item.time.toString(), fontWeight = FontWeight.Bold) },
-                    supportingContent = { Text(
-                        text = item.date) },
-                    trailingContent = { Switch(checked = checked, onCheckedChange = {checked = it})}
-                )
-                HorizontalDivider(modifier = Modifier.padding(16.dp, 4.dp, 16.dp, 8.dp))*/
-
-                Log.d("list1:", alarmList.toString())
+            itemsIndexed(sampleAlarm) { _, item ->
+                //Log.d("list1:", alarmList.size.toString())
+                var checked by remember {
+                    mutableStateOf(true)
+                }
                 val dismissState = rememberDismissState(
                     confirmValueChange = {
                         if (it == DismissValue.DismissedToEnd) {
-                            sampleAlarm.removeAt(index)
+                            sampleAlarm.remove(item)
                         }
-                        it != DismissValue.DismissedToEnd
+                        true
                     }
                 )
                 SwipeToDismiss(
                     state = dismissState,
                     background = {
-                                 Surface(
-                                     modifier = Modifier.fillMaxSize(),
-                                     color = Color.Red
-                                 ) {
+                                 val color = when(dismissState.dismissDirection){
+                                     DismissDirection.EndToStart -> Color.Red
+                                     DismissDirection.StartToEnd -> Color.Blue
+                                     null -> Color.Magenta
                                  }
                     },
                     dismissContent = {
@@ -198,14 +199,42 @@ fun AlarmContent(
     }
 }
 
-val sampleAlarm =  mutableListOf(
+@Composable
+fun AddAlarm(){
+    Dialog(
+        onDismissRequest = { /*TODO*/ },
+        properties = DialogProperties(
+            usePlatformDefaultWidth = true
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ){
+            Button(onClick = { /*TODO*/ }) {
+                Icon(imageVector = Icons.Filled.Check, contentDescription = "add new alarm")
+            }
+        }
+    }
+}
+
+val sampleAlarm =  mutableStateListOf(
     Alarm(LocalTime.now(), "First Alarm", "Tokyo", "2023/10/31"),
     Alarm(LocalTime.now(), "First Alarm", "Seoul", "2023/10/23"),
-    Alarm(LocalTime.now(), "First Alarm", "Shanghai", "2023/10/04")
+    Alarm(LocalTime.now(), "First Alarm", "Shanghai", "2023/10/04"),
+    Alarm(LocalTime.now(), "First Alarm", "sss", "2023/9/31"),
+    Alarm(LocalTime.now(), "First Alarm", "dsasac", "2023/9/23"),
+    Alarm(LocalTime.now(), "First Alarm", "sadefbgh", "2023/9/04")
     )
 
 @Preview
 @Composable
 fun AlarmPagePreview(){
     AlarmScreen(navController = rememberNavController())
+}
+
+@Preview(showSystemUi = true)
+@Composable
+fun AddAlarmPagePreview(){
+    AddAlarm()
 }
