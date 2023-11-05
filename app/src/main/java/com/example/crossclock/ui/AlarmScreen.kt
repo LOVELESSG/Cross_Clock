@@ -1,10 +1,12 @@
 package com.example.crossclock.ui
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,13 +16,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DismissDirection.*
 import androidx.compose.material3.DismissValue.*
 import androidx.compose.material3.DrawerValue
@@ -31,15 +37,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -76,7 +86,9 @@ fun AlarmScreen(navController: NavController){
         mutableStateOf(DRAWER_ITEMS[1])
     }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
+    var openAddAlarm by remember {
+        mutableStateOf(false)
+    }
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -127,12 +139,15 @@ fun AlarmScreen(navController: NavController){
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(onClick = { /* Open the Alarm Setting Page */  }) {
+                FloatingActionButton(onClick = { openAddAlarm = !openAddAlarm }) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add a new alarm")
                 }
             }
         ) { padding ->
             AlarmContent(alarmList = sampleAlarm, padding = padding)
+            if (openAddAlarm) {
+                AddAlarm()
+            }
         }
     }
     BackHandler(
@@ -225,20 +240,47 @@ fun AlarmContent(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAlarm(){
     Dialog(
         onDismissRequest = { /*TODO*/ },
         properties = DialogProperties(
-            usePlatformDefaultWidth = true
+            usePlatformDefaultWidth = false
         )
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ){
-            Button(onClick = { /*TODO*/ }) {
-                Icon(imageVector = Icons.Filled.Check, contentDescription = "add new alarm")
+        Surface(
+            modifier = Modifier.fillMaxSize()
+        )
+        {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                val datePickerState = rememberDatePickerState(initialDisplayedMonthMillis = 1578096000000)
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    title = { Text(text = "New Alarm") },
+                    navigationIcon = {
+                        IconButton(onClick = { /*TODO*/ }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back to the alarm list"
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { /*TODO*/ }) {
+                            Icon(
+                                imageVector = Icons.Filled.Done,
+                                contentDescription = "Save this alarm"
+                            )
+                        }
+                    }
+                )
+                DatePicker(state = datePickerState, modifier = Modifier.padding(16.dp))
             }
         }
     }
