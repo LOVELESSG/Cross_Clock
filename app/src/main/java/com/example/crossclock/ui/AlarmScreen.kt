@@ -1,10 +1,12 @@
 package com.example.crossclock.ui
 
-import android.util.Log
+import android.app.TimePickerDialog
+import android.text.Layout
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,19 +18,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DismissDirection.*
 import androidx.compose.material3.DismissValue.*
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -47,11 +46,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -255,8 +257,10 @@ fun AddAlarm(){
         {
             Column(
                 modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val datePickerState = rememberDatePickerState(initialDisplayedMonthMillis = 1578096000000)
+                val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
+                val timePickerState = rememberTimePickerState()
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -280,7 +284,24 @@ fun AddAlarm(){
                         }
                     }
                 )
-                DatePicker(state = datePickerState, modifier = Modifier.padding(16.dp))
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        DatePicker(state = datePickerState, modifier = Modifier.padding(16.dp))
+                    }
+                    item {
+                        TimeInput(state = timePickerState, modifier = Modifier.padding(16.dp))
+                    }
+                }
+                Text(text = timePickerState.hour.toString())
+                /*DatePicker(state = datePickerState, modifier = Modifier.padding(16.dp))
+                TimePicker(state = timePickerState, modifier = Modifier.padding(16.dp))*/
+                /*Text(text = "selected date")
+                Text(text = "selected time")
+                Text(text = datePickerState.selectedDateMillis.toString())*/
             }
         }
     }
