@@ -1,6 +1,7 @@
 package com.example.crossclock.ui
 
 import android.app.TimePickerDialog
+import android.icu.text.SimpleDateFormat
 import android.text.Layout
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
@@ -29,7 +30,10 @@ import androidx.compose.material3.DismissDirection.*
 import androidx.compose.material3.DismissValue.*
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -46,6 +50,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
@@ -56,10 +61,12 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,7 +83,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.crossclock.data.DRAWER_ITEMS
 import com.example.crossclock.data.alarm.Alarm
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.LocalTime
+import java.util.Calendar
+import java.util.Date
+import kotlin.time.Duration.Companion.days
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -259,8 +270,22 @@ fun AddAlarm(){
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
+                val datePickerState = rememberDatePickerState(
+                    initialDisplayMode = DisplayMode.Input,
+                    initialSelectedDateMillis = Instant.now().toEpochMilli()
+                )
                 val timePickerState = rememberTimePickerState()
+                val formatter = SimpleDateFormat("dd MMMM yyyy")
+                var expanded by remember {
+                    mutableStateOf(false)
+                }
+                var selectedOptionText by remember {
+                    mutableStateOf("")
+                }
+                var text by rememberSaveable {
+                    mutableStateOf("")
+                }
+
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -295,13 +320,51 @@ fun AddAlarm(){
                     item {
                         TimeInput(state = timePickerState, modifier = Modifier.padding(16.dp))
                     }
+                    item {
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = {
+                                expanded = !expanded
+                            }
+                        ) {
+                            TextField(
+                                readOnly = true,
+                                value = selectedOptionText,
+                                label = { Text(text = "Location of alarm") },
+                                onValueChange = {},
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                },
+                                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                ALL_CITIES.forEach { selectionOption ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = selectionOption.city)},
+                                        onClick = {
+                                            selectedOptionText = selectionOption.city
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    item { 
+                        TextField(
+                            value = text,
+                            onValueChange = {text = it},
+                            label = {Text("Title")},
+                            placeholder = { Text(text = "Title of alarm") }
+                        )
+                    }
                 }
-                Text(text = timePickerState.hour.toString())
-                /*DatePicker(state = datePickerState, modifier = Modifier.padding(16.dp))
-                TimePicker(state = timePickerState, modifier = Modifier.padding(16.dp))*/
-                /*Text(text = "selected date")
-                Text(text = "selected time")
-                Text(text = datePickerState.selectedDateMillis.toString())*/
+                /*Text(text = timePickerState.hour.toString())
+                Text(text = formatter.format(datePickerState.selectedDateMillis?.let { Date(it) }))*/
             }
         }
     }
