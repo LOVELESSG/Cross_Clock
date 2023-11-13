@@ -1,8 +1,6 @@
 package com.example.crossclock.ui
 
-import android.app.TimePickerDialog
 import android.icu.text.SimpleDateFormat
-import android.text.Layout
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -52,7 +50,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TimeInput
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
@@ -78,8 +75,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.crossclock.data.AlarmState
+import com.example.crossclock.data.AlarmViewModel
 import com.example.crossclock.data.DRAWER_ITEMS
 import com.example.crossclock.data.alarm.Alarm
 import kotlinx.coroutines.launch
@@ -102,6 +102,11 @@ fun AlarmScreen(navController: NavController){
     var openAddAlarm by remember {
         mutableStateOf(false)
     }
+
+    val alarmViewModel = viewModel(modelClass = AlarmViewModel::class.java)
+    val alarmState = alarmViewModel.state
+    val alarmList = alarmState.items
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -135,7 +140,6 @@ fun AlarmScreen(navController: NavController){
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                // Plan to separate this TopAppBar as an independent component
                 LargeTopAppBar(
                     title = {
                         Text(text = "Alarm")
@@ -157,9 +161,15 @@ fun AlarmScreen(navController: NavController){
                 }
             }
         ) { padding ->
-            AlarmContent(alarmList = sampleAlarm, padding = padding)
+            AlarmContent(
+                alarmViewModel.state,
+                deleteAlarm = alarmViewModel::deleteAlarm,
+                padding = padding
+            )
             if (openAddAlarm) {
-                AddAlarm()
+                AddAlarm(
+                    changeStatus = { openAddAlarm = !openAddAlarm }
+                )
             }
         }
     }
@@ -175,7 +185,9 @@ fun AlarmScreen(navController: NavController){
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmContent(
-    alarmList: MutableList<Alarm>,
+    state: AlarmState,
+    deleteAlarm: (Alarm) -> Unit,
+    //alarmList: List<Alarm>,
     padding: PaddingValues
 ) {
 
@@ -186,14 +198,15 @@ fun AlarmContent(
         contentAlignment = Alignment.TopStart
     ) {
         LazyColumn{
-            itemsIndexed(alarmList) { index, item ->
+            itemsIndexed(state.items) { index, item ->
                 var checked by remember {
                     mutableStateOf(true)
                 }
                 val dismissState = rememberDismissState(
                     confirmValueChange = {
                         if (it == DismissedToStart) {
-                            alarmList.removeAt(index)
+                            //alarmList.removeAt(index)
+                            deleteAlarm(item)
                         }
                         it != DismissedToStart
                     }
@@ -255,9 +268,11 @@ fun AlarmContent(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddAlarm(){
+fun AddAlarm(
+    changeStatus: () -> Unit
+){
     Dialog(
-        onDismissRequest = { /*TODO*/ },
+        onDismissRequest = { changeStatus() },
         properties = DialogProperties(
             usePlatformDefaultWidth = false
         )
@@ -293,7 +308,7 @@ fun AddAlarm(){
                     ),
                     title = { Text(text = "New Alarm") },
                     navigationIcon = {
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = { changeStatus() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back to the alarm list"
@@ -363,6 +378,7 @@ fun AddAlarm(){
                         )
                     }
                 }
+                //need to save the alarm
                 /*Text(text = timePickerState.hour.toString())
                 Text(text = formatter.format(datePickerState.selectedDateMillis?.let { Date(it) }))*/
             }
@@ -370,14 +386,14 @@ fun AddAlarm(){
     }
 }
 
-val sampleAlarm =  mutableStateListOf(
+/*val sampleAlarm =  mutableStateListOf(
     Alarm(LocalTime.now(), "First Alarm", "Tokyo", "2023/10/31"),
     Alarm(LocalTime.now(), "First Alarm", "Seoul", "2023/10/23"),
     Alarm(LocalTime.now(), "First Alarm", "Shanghai", "2023/10/04"),
     Alarm(LocalTime.now(), "First Alarm", "sss", "2023/9/31"),
     Alarm(LocalTime.now(), "First Alarm", "dsasac", "2023/9/23"),
     Alarm(LocalTime.now(), "First Alarm", "sadefbgh", "2023/9/04")
-    )
+    )*/
 
 @Preview
 @Composable
@@ -385,8 +401,9 @@ fun AlarmPagePreview(){
     AlarmScreen(navController = rememberNavController())
 }
 
+/*
 @Preview(showSystemUi = true)
 @Composable
 fun AddAlarmPagePreview(){
     AddAlarm()
-}
+}*/

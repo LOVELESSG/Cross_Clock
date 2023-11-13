@@ -4,13 +4,16 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.crossclock.data.alarm.Alarm
+import com.example.crossclock.data.alarm.AlarmDao
 import com.example.crossclock.data.worldclock.WorldClock
 import com.example.crossclock.data.worldclock.WorldClockDao
 
-@Database(entities = [WorldClock::class], version = 1, exportSchema = false)
+@Database(entities = [WorldClock::class, Alarm::class], version = 1, exportSchema = false)
 abstract class AppDatabase: RoomDatabase() {
 
     abstract fun worldClockDao(): WorldClockDao
+    abstract fun alarmDao(): AlarmDao
 
     companion object {
         @Volatile

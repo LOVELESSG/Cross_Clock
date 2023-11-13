@@ -1,12 +1,17 @@
 package com.example.crossclock.data
 
+import com.example.crossclock.data.alarm.Alarm
+import com.example.crossclock.data.alarm.AlarmDao
 import com.example.crossclock.data.worldclock.WorldClock
 import com.example.crossclock.data.worldclock.WorldClockDao
 
 class Repository(
-    private val worldClockDao: WorldClockDao
+    private val worldClockDao: WorldClockDao,
+    private val alarmDao: AlarmDao
 ) {
+    //World Clock part
     val allWorldClock = worldClockDao.loadAllWorldClock()
+
     suspend fun insertWorldClock(worldClock: WorldClock){
         worldClockDao.insertWorldClock(worldClock)
     }
@@ -25,4 +30,18 @@ class Repository(
 
     fun existsWorldClock(cityName: String) = worldClockDao.existsWorldClock(cityName)
 
+    // Alarm part
+    val allAlarm = alarmDao.loadAllAlarm()
+
+    suspend fun insertAlarm(alarm: Alarm) {
+        alarmDao.insertAlarm(alarm)
+    }
+
+    suspend fun updateAlarm(alarm: Alarm) {
+        alarmDao.updateAlarm(alarm)
+    }
+
+    suspend fun deleteAlarm(alarm: Alarm) {
+        alarmDao.deleteAlarm(alarm)
+    }
 }
