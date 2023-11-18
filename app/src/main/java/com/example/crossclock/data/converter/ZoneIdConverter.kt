@@ -1,4 +1,4 @@
-package com.example.crossclock.data
+package com.example.crossclock.data.converter
 
 import androidx.room.TypeConverter
 import java.time.ZoneId

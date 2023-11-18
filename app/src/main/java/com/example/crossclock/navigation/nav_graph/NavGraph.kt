@@ -5,7 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.crossclock.navigation.Screen
-import com.example.crossclock.ui.AlarmScreen
+import com.example.crossclock.ui.alarm.AlarmScreen
 import com.example.crossclock.ui.CrossClockApp
 
 @Composable

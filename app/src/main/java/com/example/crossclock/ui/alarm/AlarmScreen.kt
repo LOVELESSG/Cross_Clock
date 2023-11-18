@@ -1,4 +1,4 @@
-package com.example.crossclock.ui
+package com.example.crossclock.ui.alarm
 
 import android.icu.text.SimpleDateFormat
 import androidx.activity.compose.BackHandler
@@ -58,8 +58,6 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -82,12 +80,14 @@ import com.example.crossclock.data.AlarmState
 import com.example.crossclock.data.AlarmViewModel
 import com.example.crossclock.data.DRAWER_ITEMS
 import com.example.crossclock.data.alarm.Alarm
+import com.example.crossclock.ui.ALL_CITIES
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
-import java.util.Calendar
+import java.time.ZoneId
 import java.util.Date
-import kotlin.time.Duration.Companion.days
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -254,7 +254,7 @@ fun AlarmContent(
                         ListItem(
                             headlineContent = { Text(text = item.time.toString(), fontWeight = FontWeight.Bold) },
                             supportingContent = { Text(
-                                text = item.date) },
+                                text = item.message) },
                             trailingContent = { Switch(checked = checked, onCheckedChange = {checked = it})}
                         )
                         HorizontalDivider(modifier = Modifier.padding(16.dp, 4.dp, 16.dp, 8.dp))
@@ -290,6 +290,12 @@ fun AddAlarm(
                     initialSelectedDateMillis = Instant.now().toEpochMilli()
                 )
                 val timePickerState = rememberTimePickerState()
+                /*val dateTmp = datePickerState.selectedDateMillis?.let { Date(it) }
+                val month = datePickerState.selectedDateMillis
+                val localDateTime = LocalDateTime.of(
+
+                    LocalTime.of(timePickerState.hour, timePickerState.minute)
+                )*/
                 val formatter = SimpleDateFormat("dd MMMM yyyy")
                 var expanded by remember {
                     mutableStateOf(false)
@@ -297,9 +303,13 @@ fun AddAlarm(
                 var selectedOptionText by remember {
                     mutableStateOf("")
                 }
+                var selectedTimeZone: ZoneId? by remember {
+                    mutableStateOf(null)
+                }
                 var text by rememberSaveable {
                     mutableStateOf("")
                 }
+
 
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -362,6 +372,7 @@ fun AddAlarm(
                                         text = { Text(text = selectionOption.city)},
                                         onClick = {
                                             selectedOptionText = selectionOption.city
+                                            selectedTimeZone = selectionOption.cityTimeZoneId
                                             expanded = false
                                         }
                                     )
@@ -379,8 +390,9 @@ fun AddAlarm(
                     }
                 }
                 //need to save the alarm
-                /*Text(text = timePickerState.hour.toString())
-                Text(text = formatter.format(datePickerState.selectedDateMillis?.let { Date(it) }))*/
+                Text(text = timePickerState.hour.toString())
+                Text(text = timePickerState.toString())
+                Text(text = formatter.format(datePickerState.selectedDateMillis?.let { Date(it) }))
             }
         }
     }
