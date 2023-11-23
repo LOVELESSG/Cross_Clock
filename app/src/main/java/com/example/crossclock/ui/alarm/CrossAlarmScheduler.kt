@@ -11,12 +11,10 @@ class CrossAlarmScheduler(
 ): AlarmScheduler {
     private val alarmManager = context.getSystemService(AlarmManager::class.java)
     override fun scheduler(item: Alarm) {
-        val intent = Intent(context, AlarmReceiver::class.java).apply {
-            //todo
-        }
+        val intent = Intent(context, AlarmReceiver::class.java)
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            item.time.atZone(item.timeZone).toEpochSecond() * 10000,
+            item.time.atZone(item.timeZone).toEpochSecond() * 1000,
             PendingIntent.getBroadcast(
                 context,
                 item.hashCode(),

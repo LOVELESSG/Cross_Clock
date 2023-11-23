@@ -14,6 +14,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.crossclock.navigation.nav_graph.SetupNavGraph
 import com.example.crossclock.ui.CrossClockApp
+import com.example.crossclock.ui.alarm.CrossAlarmScheduler
 import com.example.crossclock.ui.theme.CrossClockTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val scheduler = CrossAlarmScheduler(this)
         setContent {
             CrossClockTheme {
                 // A surface container using the 'background' color from the theme
@@ -29,22 +31,10 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     navController = rememberNavController()
-                    SetupNavGraph(navController = navController)
+                    SetupNavGraph(navController = navController, scheduler)
                 }
 
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(modifier: Modifier = Modifier) {
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CrossClockTheme {
-        Greeting()
     }
 }

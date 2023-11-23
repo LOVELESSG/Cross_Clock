@@ -7,10 +7,12 @@ import androidx.navigation.compose.composable
 import com.example.crossclock.navigation.Screen
 import com.example.crossclock.ui.alarm.AlarmScreen
 import com.example.crossclock.ui.CrossClockApp
+import com.example.crossclock.ui.alarm.CrossAlarmScheduler
 
 @Composable
 fun SetupNavGraph(
-    navController: NavHostController
+    navController: NavHostController,
+    alarmScheduler: CrossAlarmScheduler
 ) {
     NavHost(
         navController = navController,
@@ -24,7 +26,7 @@ fun SetupNavGraph(
         composable(
             route = Screen.Alarm.route
         ) {
-            AlarmScreen(navController = navController)
+            AlarmScreen(navController = navController, alarmScheduler)
         }
     }
 }

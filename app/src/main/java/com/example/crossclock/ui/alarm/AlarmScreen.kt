@@ -92,7 +92,7 @@ import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlarmScreen(navController: NavController){
+fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
     val scope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val selectedItem = remember {
@@ -164,11 +164,14 @@ fun AlarmScreen(navController: NavController){
             AlarmContent(
                 alarmViewModel.state,
                 deleteAlarm = alarmViewModel::deleteAlarm,
-                padding = padding
+                padding = padding,
+                scheduler = scheduler
             )
             if (openAddAlarm) {
                 AddAlarm(
-                    changeStatus = { openAddAlarm = !openAddAlarm }
+                    scheduler = scheduler,
+                    changeStatus = { openAddAlarm = !openAddAlarm },
+                    addAlarm = alarmViewModel::addAlarm
                 )
             }
         }
@@ -188,7 +191,8 @@ fun AlarmContent(
     state: AlarmState,
     deleteAlarm: (Alarm) -> Unit,
     //alarmList: List<Alarm>,
-    padding: PaddingValues
+    padding: PaddingValues,
+    scheduler: CrossAlarmScheduler
 ) {
 
     Box(
@@ -207,6 +211,7 @@ fun AlarmContent(
                         if (it == DismissedToStart) {
                             //alarmList.removeAt(index)
                             deleteAlarm(item)
+                            item.let { scheduler::cancel }
                         }
                         it != DismissedToStart
                     }
@@ -269,7 +274,9 @@ fun AlarmContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAlarm(
-    changeStatus: () -> Unit
+    scheduler: CrossAlarmScheduler,
+    changeStatus: () -> Unit,
+    addAlarm: (Alarm) -> Unit
 ){
     Dialog(
         onDismissRequest = { changeStatus() },
@@ -290,12 +297,6 @@ fun AddAlarm(
                     initialSelectedDateMillis = Instant.now().toEpochMilli()
                 )
                 val timePickerState = rememberTimePickerState()
-                /*val dateTmp = datePickerState.selectedDateMillis?.let { Date(it) }
-                val month = datePickerState.selectedDateMillis
-                val localDateTime = LocalDateTime.of(
-
-                    LocalTime.of(timePickerState.hour, timePickerState.minute)
-                )*/
                 val formatter = SimpleDateFormat("dd MMMM yyyy")
                 var expanded by remember {
                     mutableStateOf(false)
@@ -306,10 +307,22 @@ fun AddAlarm(
                 var selectedTimeZone: ZoneId? by remember {
                     mutableStateOf(null)
                 }
-                var text by rememberSaveable {
+                var message by rememberSaveable {
                     mutableStateOf("")
                 }
-
+                var localDateTime by remember {
+                    mutableStateOf(LocalDateTime.now())
+                }
+                //var localDateTime = LocalDateTime.now()
+                if (datePickerState.selectedDateMillis != null && selectedTimeZone != null) {
+                    localDateTime = LocalDateTime.of(
+                        datePickerState.selectedDateMillis?.let {
+                            Instant.ofEpochMilli(it).atZone(selectedTimeZone).toLocalDate()
+                        },
+                        LocalTime.of(timePickerState.hour, timePickerState.minute)
+                    )
+                }
+                var alarmItem: Alarm?
 
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -326,7 +339,18 @@ fun AddAlarm(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { /*TODO*/ }) {
+                        IconButton(onClick = {
+                            alarmItem = selectedTimeZone?.let {
+                                Alarm(
+                                    time = localDateTime,
+                                    message = message,
+                                    timeZone = it
+                                )
+                            }
+                            alarmItem?.let ( scheduler::scheduler )
+                            alarmItem?.let { addAlarm(it) }
+                            alarmItem?.let { changeStatus() }
+                        }) {
                             Icon(
                                 imageVector = Icons.Filled.Done,
                                 contentDescription = "Save this alarm"
@@ -382,17 +406,13 @@ fun AddAlarm(
                     }
                     item { 
                         TextField(
-                            value = text,
-                            onValueChange = {text = it},
+                            value = message,
+                            onValueChange = {message = it},
                             label = {Text("Title")},
                             placeholder = { Text(text = "Title of alarm") }
                         )
                     }
                 }
-                //need to save the alarm
-                Text(text = timePickerState.hour.toString())
-                Text(text = timePickerState.toString())
-                Text(text = formatter.format(datePickerState.selectedDateMillis?.let { Date(it) }))
             }
         }
     }
@@ -406,16 +426,3 @@ fun AddAlarm(
     Alarm(LocalTime.now(), "First Alarm", "dsasac", "2023/9/23"),
     Alarm(LocalTime.now(), "First Alarm", "sadefbgh", "2023/9/04")
     )*/
-
-@Preview
-@Composable
-fun AlarmPagePreview(){
-    AlarmScreen(navController = rememberNavController())
-}
-
-/*
-@Preview(showSystemUi = true)
-@Composable
-fun AddAlarmPagePreview(){
-    AddAlarm()
-}*/
