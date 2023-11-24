@@ -15,7 +15,6 @@ class AlarmReceiver: BroadcastReceiver() {
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         val ringtone = RingtoneManager.getRingtone(context, alarmSound)
         ringtone.play()
-        Log.d("alarmnotification:", "goes here")
 
         val notification = context?.let {
             NotificationCompat.Builder(it, "Alarm_Channel")

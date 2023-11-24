@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.example.crossclock.data.alarm.Alarm
 
 class CrossAlarmScheduler(
@@ -17,7 +18,7 @@ class CrossAlarmScheduler(
             item.time.atZone(item.timeZone).toEpochSecond() * 1000,
             PendingIntent.getBroadcast(
                 context,
-                item.hashCode(),
+                item.id,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
@@ -28,7 +29,7 @@ class CrossAlarmScheduler(
         alarmManager.cancel(
             PendingIntent.getBroadcast(
                 context,
-                item.hashCode(),
+                item.id,
                 Intent(context, AlarmReceiver::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )

@@ -1,6 +1,7 @@
 package com.example.crossclock.ui.alarm
 
 import android.icu.text.SimpleDateFormat
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -87,6 +88,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 
@@ -190,7 +192,6 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
 fun AlarmContent(
     state: AlarmState,
     deleteAlarm: (Alarm) -> Unit,
-    //alarmList: List<Alarm>,
     padding: PaddingValues,
     scheduler: CrossAlarmScheduler
 ) {
@@ -209,9 +210,11 @@ fun AlarmContent(
                 val dismissState = rememberDismissState(
                     confirmValueChange = {
                         if (it == DismissedToStart) {
-                            //alarmList.removeAt(index)
+                            Log.d("item1:", item.toString())
                             deleteAlarm(item)
-                            item.let { scheduler::cancel }
+                            Log.d("item2:", item.toString())
+                            //item.let ( scheduler::cancel )
+                            scheduler.cancel(item = item)
                         }
                         it != DismissedToStart
                     }
@@ -313,7 +316,6 @@ fun AddAlarm(
                 var localDateTime by remember {
                     mutableStateOf(LocalDateTime.now())
                 }
-                //var localDateTime = LocalDateTime.now()
                 if (datePickerState.selectedDateMillis != null && selectedTimeZone != null) {
                     localDateTime = LocalDateTime.of(
                         datePickerState.selectedDateMillis?.let {
@@ -347,7 +349,7 @@ fun AddAlarm(
                                     timeZone = it
                                 )
                             }
-                            alarmItem?.let ( scheduler::scheduler )
+                            alarmItem?.let (scheduler::scheduler)
                             alarmItem?.let { addAlarm(it) }
                             alarmItem?.let { changeStatus() }
                         }) {
