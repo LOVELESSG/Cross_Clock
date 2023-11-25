@@ -167,7 +167,8 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
                 alarmViewModel.state,
                 deleteAlarm = alarmViewModel::deleteAlarm,
                 padding = padding,
-                scheduler = scheduler
+                scheduler = scheduler,
+                changeAlarmStatus = alarmViewModel::updateAlarmStatus
             )
             if (openAddAlarm) {
                 AddAlarm(
@@ -193,7 +194,8 @@ fun AlarmContent(
     state: AlarmState,
     deleteAlarm: (Alarm) -> Unit,
     padding: PaddingValues,
-    scheduler: CrossAlarmScheduler
+    scheduler: CrossAlarmScheduler,
+    changeAlarmStatus: (Alarm) -> Unit
 ) {
 
     Box(
@@ -204,21 +206,20 @@ fun AlarmContent(
     ) {
         LazyColumn{
             itemsIndexed(state.items) { index, item ->
-                var checked by remember {
-                    mutableStateOf(true)
-                }
                 val dismissState = rememberDismissState(
                     confirmValueChange = {
                         if (it == DismissedToStart) {
-                            Log.d("item1:", item.toString())
+                            item.let(scheduler::cancel)
                             deleteAlarm(item)
-                            Log.d("item2:", item.toString())
-                            //item.let ( scheduler::cancel )
-                            scheduler.cancel(item = item)
                         }
                         it != DismissedToStart
                     }
                 )
+                if (item.onOrOff) {
+                    item.let(scheduler::scheduler)
+                } else {
+                    item.let(scheduler::cancel)
+                }
                 SwipeToDismiss(
                     state = dismissState,
                     modifier = Modifier.padding(vertical = 4.dp),
@@ -263,7 +264,11 @@ fun AlarmContent(
                             headlineContent = { Text(text = item.time.toString(), fontWeight = FontWeight.Bold) },
                             supportingContent = { Text(
                                 text = item.message) },
-                            trailingContent = { Switch(checked = checked, onCheckedChange = {checked = it})}
+                            trailingContent = { Switch(
+                                checked = item.onOrOff,
+                                onCheckedChange = {
+                                    changeAlarmStatus(item)
+                                })}
                         )
                         HorizontalDivider(modifier = Modifier.padding(16.dp, 4.dp, 16.dp, 8.dp))
                     }
@@ -349,8 +354,8 @@ fun AddAlarm(
                                     timeZone = it
                                 )
                             }
-                            alarmItem?.let (scheduler::scheduler)
                             alarmItem?.let { addAlarm(it) }
+                            //alarmItem?.let (scheduler::scheduler)
                             alarmItem?.let { changeStatus() }
                         }) {
                             Icon(

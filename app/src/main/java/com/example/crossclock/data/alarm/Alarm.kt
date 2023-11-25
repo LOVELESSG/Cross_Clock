@@ -13,4 +13,5 @@ data class Alarm(
     val time: LocalDateTime,
     val message: String,
     val timeZone: ZoneId,
+    val onOrOff: Boolean = true
 )

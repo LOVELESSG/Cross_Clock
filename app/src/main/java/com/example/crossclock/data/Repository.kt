@@ -37,8 +37,8 @@ class Repository(
         alarmDao.insertAlarm(alarm)
     }
 
-    suspend fun updateAlarm(alarm: Alarm) {
-        alarmDao.updateAlarm(alarm)
+    suspend fun updateAlarmStatus(alarm: Alarm) {
+        alarmDao.updateAlarmStatus(alarm.id, !alarm.onOrOff)
     }
 
     suspend fun deleteAlarm(alarm: Alarm) {

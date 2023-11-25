@@ -41,9 +41,9 @@ class AlarmViewModel(
         }
     }
 
-    fun updateAlarm(alarm: Alarm) {
+    fun updateAlarmStatus(alarm: Alarm) {
         viewModelScope.launch {
-            repository.updateAlarm(alarm)
+            repository.updateAlarmStatus(alarm)
         }
     }
 }
