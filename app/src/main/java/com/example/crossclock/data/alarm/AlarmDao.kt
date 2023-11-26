@@ -19,6 +19,9 @@ interface AlarmDao {
     @Query("select * from Alarm")
     fun loadAllAlarm(): Flow<List<Alarm>>
 
+    @Query("select * from Alarm")
+    fun loadAllAlarmInList(): List<Alarm>
+
     @Delete
     suspend fun deleteAlarm(alarm: Alarm)
 

@@ -217,7 +217,7 @@ fun AlarmContent(
                 )
                 if (item.onOrOff) {
                     item.let(scheduler::scheduler)
-                } else {
+                } else{
                     item.let(scheduler::cancel)
                 }
                 SwipeToDismiss(
@@ -325,6 +325,7 @@ fun AddAlarm(
                     localDateTime = LocalDateTime.of(
                         datePickerState.selectedDateMillis?.let {
                             Instant.ofEpochMilli(it).atZone(selectedTimeZone).toLocalDate()
+                            //Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                         },
                         LocalTime.of(timePickerState.hour, timePickerState.minute)
                     )
@@ -424,12 +425,3 @@ fun AddAlarm(
         }
     }
 }
-
-/*val sampleAlarm =  mutableStateListOf(
-    Alarm(LocalTime.now(), "First Alarm", "Tokyo", "2023/10/31"),
-    Alarm(LocalTime.now(), "First Alarm", "Seoul", "2023/10/23"),
-    Alarm(LocalTime.now(), "First Alarm", "Shanghai", "2023/10/04"),
-    Alarm(LocalTime.now(), "First Alarm", "sss", "2023/9/31"),
-    Alarm(LocalTime.now(), "First Alarm", "dsasac", "2023/9/23"),
-    Alarm(LocalTime.now(), "First Alarm", "sadefbgh", "2023/9/04")
-    )*/

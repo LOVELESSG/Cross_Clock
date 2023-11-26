@@ -5,7 +5,11 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.example.crossclock.Graph
+import com.example.crossclock.data.AppDatabase
+import com.example.crossclock.data.Repository
 import com.example.crossclock.data.alarm.Alarm
+import kotlinx.coroutines.flow.last
 
 class CrossAlarmScheduler(
     private val context: Context
@@ -24,7 +28,6 @@ class CrossAlarmScheduler(
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
-        Log.d("schedule hashcode: ", item.id.toString())
     }
 
     override fun cancel(item: Alarm) {
@@ -39,4 +42,23 @@ class CrossAlarmScheduler(
         )
         Log.d("cancel hashcode: ", item.id.toString())
     }
+
+    /*override fun resetAllAlarms() {
+        val db = AppDatabase.getDatabase(context)
+        val alarmList = db.alarmDao().loadAllAlarmInList()
+        for (alarm in alarmList){
+            if (alarm.onOrOff) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    alarm.time.atZone(alarm.timeZone).toEpochSecond() * 1000,
+                    PendingIntent.getBroadcast(
+                        context,
+                        alarm.id,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                )
+            }
+        }
+    }*/
 }
