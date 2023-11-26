@@ -324,8 +324,8 @@ fun AddAlarm(
                 if (datePickerState.selectedDateMillis != null && selectedTimeZone != null) {
                     localDateTime = LocalDateTime.of(
                         datePickerState.selectedDateMillis?.let {
-                            Instant.ofEpochMilli(it).atZone(selectedTimeZone).toLocalDate()
-                            //Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                            //Instant.ofEpochMilli(it).atZone(selectedTimeZone).toLocalDate()
+                            Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                         },
                         LocalTime.of(timePickerState.hour, timePickerState.minute)
                     )
