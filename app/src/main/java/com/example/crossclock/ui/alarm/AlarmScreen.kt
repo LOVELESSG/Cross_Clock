@@ -172,7 +172,6 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
             )
             if (openAddAlarm) {
                 AddAlarm(
-                    scheduler = scheduler,
                     changeStatus = { openAddAlarm = !openAddAlarm },
                     addAlarm = alarmViewModel::addAlarm
                 )
@@ -282,7 +281,6 @@ fun AlarmContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAlarm(
-    scheduler: CrossAlarmScheduler,
     changeStatus: () -> Unit,
     addAlarm: (Alarm) -> Unit
 ){
@@ -324,7 +322,6 @@ fun AddAlarm(
                 if (datePickerState.selectedDateMillis != null && selectedTimeZone != null) {
                     localDateTime = LocalDateTime.of(
                         datePickerState.selectedDateMillis?.let {
-                            //Instant.ofEpochMilli(it).atZone(selectedTimeZone).toLocalDate()
                             Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                         },
                         LocalTime.of(timePickerState.hour, timePickerState.minute)
@@ -356,7 +353,6 @@ fun AddAlarm(
                                 )
                             }
                             alarmItem?.let { addAlarm(it) }
-                            //alarmItem?.let (scheduler::scheduler)
                             alarmItem?.let { changeStatus() }
                         }) {
                             Icon(

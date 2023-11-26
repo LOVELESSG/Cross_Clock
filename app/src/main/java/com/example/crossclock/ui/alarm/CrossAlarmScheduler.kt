@@ -17,7 +17,6 @@ class CrossAlarmScheduler(
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     private val intent = Intent(context, AlarmReceiver::class.java)
     override fun scheduler(item: Alarm) {
-        //val intent = Intent(context, AlarmReceiver::class.java)
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             item.time.atZone(item.timeZone).toEpochSecond() * 1000,
@@ -36,29 +35,9 @@ class CrossAlarmScheduler(
                 context,
                 item.id,
                 intent,
-                //Intent(context, AlarmReceiver::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )
         Log.d("cancel hashcode: ", item.id.toString())
     }
-
-    /*override fun resetAllAlarms() {
-        val db = AppDatabase.getDatabase(context)
-        val alarmList = db.alarmDao().loadAllAlarmInList()
-        for (alarm in alarmList){
-            if (alarm.onOrOff) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    alarm.time.atZone(alarm.timeZone).toEpochSecond() * 1000,
-                    PendingIntent.getBroadcast(
-                        context,
-                        alarm.id,
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                )
-            }
-        }
-    }*/
 }

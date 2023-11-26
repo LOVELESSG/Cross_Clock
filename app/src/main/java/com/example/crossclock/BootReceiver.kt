@@ -25,45 +25,12 @@ import java.util.logging.Handler
 
 class BootReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val repository: Repository = Graph.repository
-        val scheduler = CrossAlarmScheduler(context)
-        Log.d("before the if: ", (intent.action == "android.intent.action.BOOT_COMPLETED").toString())
         if (intent.action == "android.intent.action.BOOT_COMPLETED") {
-            /*GlobalScope.launch {
-                var alarms = repository.allAlarm.last()
-                Log.d("before the loop: ", alarms.toString())
-                for (alarm in alarms){
-                    if (alarm.onOrOff) {
-                        alarm.let(scheduler::scheduler)
-                    }
-                }
-            }*/
-            /*Log.d("before the block: ", "yes")
-            runBlocking {
-                //Log.d("before the init: ","yes" )
-
-                Log.d("before the collect: ", "yes")
-                repository.allAlarm.collectLatest {
-                    Log.d("before the assign:", repository.allAlarm.last().toString())
-                    alarms = alarms.copy(
-                        items = it
-                    )
-                }
-                Log.d("before the loop: ", alarms.toString())
-                for (alarm in alarms.items){
-                    if (alarm.onOrOff) {
-                        alarm.let(scheduler::scheduler)
-                    }
-                }
-            }*/
-
-            //scheduler.resetAllAlarms()
             reSetAllAlarms(context)
         }
     }
 
     private fun reSetAllAlarms(context: Context){
-
         val task = object : AsyncTask<Void, Void, Void>() {
             override fun doInBackground(vararg params: Void?): Void? {
                 val db = AppDatabase.getDatabase(context)
