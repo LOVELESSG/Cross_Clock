@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -204,7 +205,7 @@ fun AlarmContent(
         contentAlignment = Alignment.TopStart
     ) {
         LazyColumn{
-            itemsIndexed(state.items) { index, item ->
+            items(state.items, key = {it.id}) { item ->
                 val dismissState = rememberDismissState(
                     confirmValueChange = {
                         if (it == DismissedToStart) {
