@@ -214,10 +214,17 @@ fun AlarmContent(
                         it != DismissedToStart
                     }
                 )
-                if (item.onOrOff) {
+                val itemTime = item.time.atZone(item.timeZone)
+                val nowTime = LocalDateTime.now()
+                val compareTime = nowTime.isBefore(itemTime.toLocalDateTime())
+                var enableSwitch by remember {
+                    mutableStateOf(true)
+                }
+                if (item.onOrOff && compareTime) {
                     item.let(scheduler::scheduler)
                 } else{
                     item.let(scheduler::cancel)
+                    enableSwitch = false
                 }
                 SwipeToDismiss(
                     state = dismissState,
@@ -267,7 +274,10 @@ fun AlarmContent(
                                 checked = item.onOrOff,
                                 onCheckedChange = {
                                     changeAlarmStatus(item)
-                                })}
+                                },
+                                enabled = enableSwitch
+                            )
+                            }
                         )
                         HorizontalDivider(modifier = Modifier.padding(16.dp, 4.dp, 16.dp, 8.dp))
                     }
