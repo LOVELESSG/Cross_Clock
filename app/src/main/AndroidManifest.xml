@@ -19,6 +19,15 @@
         android:theme="@style/Theme.CrossClock"
         tools:targetApi="31">
         <activity
+            android:name=".FullScreenAlarmNotification"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true"
+            android:showWhenLocked="true"
+            android:label="@string/title_activity_full_screen_alarm_notification"
+            android:theme="@style/Theme.CrossClock" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
@@ -29,8 +38,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <receiver android:name=".ui.alarm.AlarmReceiver" />
-        <receiver android:name=".BootReceiver"
+        <receiver
+            android:name=".BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

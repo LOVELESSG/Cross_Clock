@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Cross Clock</string>
+    <string name="title_activity_full_screen_alarm_notification">FullScreenAlarmNotification
+    </string>
 </resources>

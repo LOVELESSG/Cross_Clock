@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.example.crossclock.FullScreenAlarmNotification
 import com.example.crossclock.MainActivity
 import com.example.crossclock.R
 
@@ -36,7 +37,7 @@ class AlarmReceiver: BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val fullScreenIntent = Intent(context, MainActivity::class.java)
+        val fullScreenIntent = Intent(context, FullScreenAlarmNotification::class.java)
         val fullScreenPendingIntent = PendingIntent.getActivity(context, 0,
             fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
