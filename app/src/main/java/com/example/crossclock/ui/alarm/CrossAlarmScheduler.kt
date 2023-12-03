@@ -10,6 +10,7 @@ import com.example.crossclock.data.AppDatabase
 import com.example.crossclock.data.Repository
 import com.example.crossclock.data.alarm.Alarm
 import kotlinx.coroutines.flow.last
+import java.text.SimpleDateFormat
 
 class CrossAlarmScheduler(
     private val context: Context
@@ -23,7 +24,10 @@ class CrossAlarmScheduler(
             PendingIntent.getBroadcast(
                 context,
                 item.id,
-                intent,
+                intent.apply {
+                    putExtra("message", item.message)
+                    putExtra("time", item.time.toLocalTime().toString())
+                    putExtra("id", item.id)},
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
         )

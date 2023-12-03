@@ -216,8 +216,8 @@ fun AlarmContent(
                     }
                 )
                 val itemTime = item.time.atZone(item.timeZone)
-                val nowTime = LocalDateTime.now()
-                val compareTime = nowTime.isBefore(itemTime.toLocalDateTime())
+                val nowTime = LocalDateTime.now().atZone(ZoneId.systemDefault())
+                val compareTime = nowTime.isBefore(itemTime)
                 var enableSwitch by remember {
                     mutableStateOf(true)
                 }
@@ -314,7 +314,6 @@ fun AddAlarm(
                     initialSelectedDateMillis = Instant.now().toEpochMilli()
                 )
                 val timePickerState = rememberTimePickerState()
-                val formatter = SimpleDateFormat("dd MMMM yyyy")
                 var expanded by remember {
                     mutableStateOf(false)
                 }

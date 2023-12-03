@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -24,7 +25,8 @@ class FullScreenAlarmNotification : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    val alarmId = intent.getIntExtra("alarmId", 0)
+                    Greeting(alarmId)
                 }
             }
         }
@@ -32,7 +34,14 @@ class FullScreenAlarmNotification : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun WakeupAlarmPage() {
+    Column {
+        //todo
+    }
+}
+
+@Composable
+fun Greeting(name: Int, modifier: Modifier = Modifier) {
     Text(
         text = "Hello $name!",
         modifier = modifier
@@ -43,6 +52,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     CrossClockTheme {
-        Greeting("Android")
+        Greeting(0)
     }
 }

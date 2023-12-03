@@ -21,10 +21,14 @@ import com.example.crossclock.MainActivity
 import com.example.crossclock.R
 
 class AlarmReceiver: BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent?) {
+    override fun onReceive(context: Context, intent: Intent) {
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         val ringtone = RingtoneManager.getRingtone(context, alarmSound)
         ringtone.play()
+
+        val message = intent.getStringExtra("message")
+        val time = intent.getStringExtra("time")
+        val alarmId = intent.getIntExtra("id", 0)
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -37,13 +41,15 @@ class AlarmReceiver: BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val fullScreenIntent = Intent(context, FullScreenAlarmNotification::class.java)
+        val fullScreenIntent = Intent(context, FullScreenAlarmNotification::class.java).apply {
+            putExtra("alarmId", alarmId)
+        }
         val fullScreenPendingIntent = PendingIntent.getActivity(context, 0,
             fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(context, "alarm_channel")
-            .setContentTitle("Alarm is on")
-            .setContentText("Wake up")
+            .setContentTitle(message)
+            .setContentText(time)
             .setSmallIcon(R.drawable.baseline_alarm_on_24)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
