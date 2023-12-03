@@ -21,8 +21,8 @@
         <activity
             android:name=".FullScreenAlarmNotification"
             android:exported="false"
-            android:launchMode="singleTop"
             android:showOnLockScreen="true"
+            android:launchMode="singleInstance"
             android:turnScreenOn="true"
             android:showWhenLocked="true"
             android:label="@string/title_activity_full_screen_alarm_notification"
