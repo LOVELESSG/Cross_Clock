@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.logging.Handler
 
 class BootReceiver: BroadcastReceiver() {
@@ -37,7 +39,10 @@ class BootReceiver: BroadcastReceiver() {
                 val alarms = db.alarmDao().loadAllAlarmInList()
 
                 for (alarm in alarms) {
-                    if (alarm.onOrOff) {
+                    val alarmTime = alarm.time.atZone(alarm.timeZone)
+                    val nowTime = LocalDateTime.now().atZone(ZoneId.systemDefault())
+                    val compareTime = nowTime.isBefore(alarmTime)
+                    if (alarm.onOrOff && compareTime) {
                         val alarmManager =
                             context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                         val alarmIntent = Intent(context, AlarmReceiver::class.java)

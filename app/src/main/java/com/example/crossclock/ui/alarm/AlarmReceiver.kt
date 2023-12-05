@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.media.RingtoneManager
 import android.os.Build
 import android.util.Log
@@ -14,17 +15,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.crossclock.FullScreenAlarmNotification
 import com.example.crossclock.MainActivity
 import com.example.crossclock.R
+import kotlin.system.exitProcess
 
 class AlarmReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        val ringtone = RingtoneManager.getRingtone(context, alarmSound)
-        ringtone.play()
+        /*val ringtone = RingtoneManager.getRingtone(context, alarmSound)
+        ringtone.play()*/
 
         val message = intent.getStringExtra("message")
         val time = intent.getStringExtra("time")
@@ -38,6 +41,8 @@ class AlarmReceiver: BroadcastReceiver() {
                 channelId, channelName, NotificationManager.IMPORTANCE_HIGH).apply {
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
+            channel.setSound(alarmSound, null)
+            channel
             notificationManager.createNotificationChannel(channel)
         }
 
@@ -45,7 +50,7 @@ class AlarmReceiver: BroadcastReceiver() {
             putExtra("alarmId", alarmId)
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(context, 0,
-            fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+            fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(context, "alarm_channel")
             .setContentTitle(message)
@@ -55,6 +60,9 @@ class AlarmReceiver: BroadcastReceiver() {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
             .setFullScreenIntent(fullScreenPendingIntent, true)
+            //.setSound(alarmSound, AudioManager.STREAM_ALARM)
+            .setSound(alarmSound)
+            .setTimeoutAfter(15000)
 
         val alarmNotification = notification.build()
         notificationManager.notify(24778, alarmNotification)
