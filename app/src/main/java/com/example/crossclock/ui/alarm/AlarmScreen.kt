@@ -1,8 +1,15 @@
 package com.example.crossclock.ui.alarm
 
+import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
 import android.icu.text.SimpleDateFormat
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -70,11 +77,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -313,7 +322,7 @@ fun AddAlarm(
                     initialDisplayMode = DisplayMode.Input,
                     initialSelectedDateMillis = Instant.now().toEpochMilli()
                 )
-                val timePickerState = rememberTimePickerState()
+                val timePickerState = rememberTimePickerState(is24Hour = false)
                 var expanded by remember {
                     mutableStateOf(false)
                 }
@@ -338,6 +347,24 @@ fun AddAlarm(
                     )
                 }
                 var alarmItem: Alarm?
+                val context = LocalContext.current
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                var hasNotificationPermission by remember {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        mutableStateOf(
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+                        )
+                    } else mutableStateOf(true)
+                }
+                val requestPermissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = { isGranted ->
+                        hasNotificationPermission = isGranted
+                    }
+                )
 
                 TopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -355,15 +382,37 @@ fun AddAlarm(
                     },
                     actions = {
                         IconButton(onClick = {
-                            alarmItem = selectedTimeZone?.let {
-                                Alarm(
-                                    time = localDateTime,
-                                    message = message,
-                                    timeZone = it
-                                )
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                when (manager.areNotificationsEnabled()) {
+                                    true -> {
+                                        alarmItem = selectedTimeZone?.let {
+                                            Alarm(
+                                                time = localDateTime,
+                                                message = message,
+                                                timeZone = it
+                                            )
+                                        }
+                                        alarmItem?.let { addAlarm(it) }
+                                        alarmItem?.let { changeStatus() }
+                                    }
+
+                                    false -> {
+                                        requestPermissionLauncher.launch(
+                                            Manifest.permission.POST_NOTIFICATIONS
+                                        )
+                                    }
+                                }
+                            } else {
+                                alarmItem = selectedTimeZone?.let {
+                                    Alarm(
+                                        time = localDateTime,
+                                        message = message,
+                                        timeZone = it
+                                    )
+                                }
+                                alarmItem?.let { addAlarm(it) }
+                                alarmItem?.let { changeStatus() }
                             }
-                            alarmItem?.let { addAlarm(it) }
-                            alarmItem?.let { changeStatus() }
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Done,

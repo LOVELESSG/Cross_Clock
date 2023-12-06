@@ -26,8 +26,6 @@ import kotlin.system.exitProcess
 class AlarmReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        /*val ringtone = RingtoneManager.getRingtone(context, alarmSound)
-        ringtone.play()*/
 
         val message = intent.getStringExtra("message")
         val time = intent.getStringExtra("time")
@@ -42,7 +40,6 @@ class AlarmReceiver: BroadcastReceiver() {
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
             channel.setSound(alarmSound, null)
-            channel
             notificationManager.createNotificationChannel(channel)
         }
 
@@ -60,8 +57,9 @@ class AlarmReceiver: BroadcastReceiver() {
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
             .setFullScreenIntent(fullScreenPendingIntent, true)
-            //.setSound(alarmSound, AudioManager.STREAM_ALARM)
             .setSound(alarmSound)
+            //.setWhen(System.currentTimeMillis()+15000)
+            //.setOnlyAlertOnce(true)
             .setTimeoutAfter(15000)
 
         val alarmNotification = notification.build()
