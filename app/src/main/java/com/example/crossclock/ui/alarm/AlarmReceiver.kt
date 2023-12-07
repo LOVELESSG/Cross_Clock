@@ -1,5 +1,6 @@
 package com.example.crossclock.ui.alarm
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,6 +8,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.RingtoneManager
 import android.os.Build
@@ -26,6 +28,7 @@ import kotlin.system.exitProcess
 class AlarmReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        val ringtone = RingtoneManager.getRingtone(context, alarmSound)
 
         val message = intent.getStringExtra("message")
         val time = intent.getStringExtra("time")
@@ -39,7 +42,11 @@ class AlarmReceiver: BroadcastReceiver() {
                 channelId, channelName, NotificationManager.IMPORTANCE_HIGH).apply {
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
-            channel.setSound(alarmSound, null)
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .build()
+            //channel.setSound(alarmSound, null)
+            channel.setSound(null, audioAttributes)
             notificationManager.createNotificationChannel(channel)
         }
 
@@ -48,6 +55,8 @@ class AlarmReceiver: BroadcastReceiver() {
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(context, 0,
             fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        //val deleteIntent = Intent(context, MainActivity::class.java)
+        //val deletePendingIntent = PendingIntent.getActivity(context, 0, deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(context, "alarm_channel")
             .setContentTitle(message)
@@ -55,14 +64,22 @@ class AlarmReceiver: BroadcastReceiver() {
             .setSmallIcon(R.drawable.baseline_alarm_on_24)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setAutoCancel(true)
+            .setOngoing(true)
             .setFullScreenIntent(fullScreenPendingIntent, true)
-            .setSound(alarmSound)
+            //.setSound(alarmSound)
+            .setSound(null)
+            //.setDeleteIntent(deletePendingIntent)
             //.setWhen(System.currentTimeMillis()+15000)
-            //.setOnlyAlertOnce(true)
-            .setTimeoutAfter(15000)
+            //.setOnlyAlertOnce(false)
+            //.setTimeoutAfter(10000)
 
         val alarmNotification = notification.build()
         notificationManager.notify(24778, alarmNotification)
+        /*if (notificationManager.areNotificationsEnabled()) {
+            ringtone.play()
+        } else {
+            ringtone.stop()
+        }*/
+        ringtone.play()
     }
 }
