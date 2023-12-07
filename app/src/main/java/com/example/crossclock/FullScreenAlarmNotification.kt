@@ -3,6 +3,7 @@ package com.example.crossclock
 import android.app.Activity
 import android.app.NotificationManager
 import android.content.Context
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -41,8 +42,10 @@ class FullScreenAlarmNotification : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val alarmId = intent.getIntExtra("alarmId", 0)
+                    val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                    val ringtone = RingtoneManager.getRingtone(this, alarmSound)
                     WakeupAlarmPage(this)
+                    //ringtone.play()
                 }
             }
         }

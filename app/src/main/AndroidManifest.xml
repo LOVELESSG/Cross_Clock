@@ -41,6 +41,7 @@
         </activity>
 
         <receiver android:name=".ui.alarm.AlarmReceiver" />
+        <receiver android:name=".ui.alarm.AlarmCancelReceiver" />
         <receiver
             android:name=".BootReceiver"
             android:exported="false">

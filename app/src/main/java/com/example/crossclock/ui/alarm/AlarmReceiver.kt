@@ -51,12 +51,13 @@ class AlarmReceiver: BroadcastReceiver() {
         }
 
         val fullScreenIntent = Intent(context, FullScreenAlarmNotification::class.java).apply {
-            putExtra("alarmId", alarmId)
+            putExtra("soundStatus", true)
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(context, 0,
             fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        //val deleteIntent = Intent(context, MainActivity::class.java)
-        //val deletePendingIntent = PendingIntent.getActivity(context, 0, deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val deleteIntent = Intent(context, AlarmCancelReceiver::class.java).apply {
+        }
+        val deletePendingIntent = PendingIntent.getBroadcast(context, 1, deleteIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(context, "alarm_channel")
             .setContentTitle(message)
@@ -64,14 +65,14 @@ class AlarmReceiver: BroadcastReceiver() {
             .setSmallIcon(R.drawable.baseline_alarm_on_24)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setOngoing(true)
+            //.setOngoing(true)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             //.setSound(alarmSound)
             .setSound(null)
-            //.setDeleteIntent(deletePendingIntent)
+            .setDeleteIntent(deletePendingIntent)
             //.setWhen(System.currentTimeMillis()+15000)
             //.setOnlyAlertOnce(false)
-            //.setTimeoutAfter(10000)
+            //.setTimeoutAfter(30000)
 
         val alarmNotification = notification.build()
         notificationManager.notify(24778, alarmNotification)
