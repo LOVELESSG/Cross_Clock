@@ -78,6 +78,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -99,6 +102,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Date
 
 
@@ -127,12 +131,21 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
                     .requiredWidth(200.dp)
                     .fillMaxHeight()
             ) {
-                Text(text = "World Clock side")
-                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "CrossClock",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(16.dp)
+                    )
+                HorizontalDivider(modifier = Modifier.padding(0.dp, 4.dp, 0.dp, 4.dp))
                 DRAWER_ITEMS.forEach { item ->
                     NavigationDrawerItem(
-                        icon = { Icon(imageVector = item.icon, contentDescription = null) },
-                        label = { Text(text = (item.name)) },
+                        icon = { Icon(painter = painterResource(id = item.icon), contentDescription = null) },
+                        label = {
+                            Text(
+                                text = (item.name),
+                                modifier = Modifier.padding(16.dp))
+                                },
                         selected = item == selectedItem.value,
                         onClick = {
                             scope.launch { drawerState.close() }
@@ -238,7 +251,7 @@ fun AlarmContent(
                 }
                 SwipeToDismiss(
                     state = dismissState,
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.padding(vertical = 0.dp),
                     directions = setOf(StartToEnd, EndToStart),
                     background = {
                         val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
@@ -277,7 +290,7 @@ fun AlarmContent(
                     },
                     dismissContent = {
                         ListItem(
-                            headlineContent = { Text(text = item.time.toString(), fontWeight = FontWeight.Bold) },
+                            headlineContent = { Text(text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), fontWeight = FontWeight.Bold) },
                             supportingContent = { Text(
                                 text = item.message) },
                             trailingContent = { Switch(
@@ -289,9 +302,9 @@ fun AlarmContent(
                             )
                             }
                         )
-                        HorizontalDivider(modifier = Modifier.padding(16.dp, 4.dp, 16.dp, 8.dp))
                     }
                 )
+                HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp))
             }
         }
     }

@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -41,11 +42,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.crossclock.R
 import com.example.crossclock.data.DRAWER_ITEMS
 import com.example.crossclock.data.worldclock.WorldClock
 import com.example.crossclock.data.WorldClockViewModel
@@ -83,12 +86,21 @@ fun CrossClockApp(
                     .requiredWidth(200.dp)
                     .fillMaxHeight()
             ) {
-                Text(text = "World Clock side")
-                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "CrossClock",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(16.dp)
+                )
+                HorizontalDivider(modifier = Modifier.padding(0.dp, 4.dp, 0.dp, 4.dp))
                 DRAWER_ITEMS.forEach {item ->
                     NavigationDrawerItem(
-                        icon = { Icon(imageVector = item.icon, contentDescription = null)},
-                        label = { Text(text = (item.name)) },
+                        icon = { Icon(painter = painterResource(id = item.icon), contentDescription = null) },
+                        label = {
+                            Text(
+                                text = (item.name),
+                                modifier = Modifier.padding(16.dp))
+                        },
                         selected = item == selectedItem.value,
                         onClick = {
                             scope.launch { drawerState.close() }
