@@ -1,6 +1,5 @@
 package com.example.crossclock.ui.alarm
 
-import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,21 +8,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.media.AudioManager
 import android.media.RingtoneManager
 import android.os.Build
-import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import com.example.crossclock.FullScreenAlarmNotification
-import com.example.crossclock.MainActivity
 import com.example.crossclock.R
-import kotlin.system.exitProcess
 
 class AlarmReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -32,7 +21,6 @@ class AlarmReceiver: BroadcastReceiver() {
 
         val message = intent.getStringExtra("message")
         val time = intent.getStringExtra("time")
-        val alarmId = intent.getIntExtra("id", 0)
 
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -64,22 +52,13 @@ class AlarmReceiver: BroadcastReceiver() {
             .setSmallIcon(R.drawable.baseline_alarm_on_24)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            //.setOngoing(true)
             .setFullScreenIntent(fullScreenPendingIntent, true)
-            //.setSound(alarmSound)
             .setSound(null)
             .setDeleteIntent(deletePendingIntent)
-            //.setWhen(System.currentTimeMillis()+15000)
-            //.setOnlyAlertOnce(false)
             .setTimeoutAfter(30000)
 
         val alarmNotification = notification.build()
         notificationManager.notify(24778, alarmNotification)
-        /*if (notificationManager.areNotificationsEnabled()) {
-            ringtone.play()
-        } else {
-            ringtone.stop()
-        }*/
         ringtone.play()
     }
 }

@@ -3,10 +3,8 @@ package com.example.crossclock.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,10 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.crossclock.R
 import com.example.crossclock.data.DRAWER_ITEMS
-import com.example.crossclock.data.worldclock.WorldClock
 import com.example.crossclock.data.WorldClockViewModel
+import com.example.crossclock.data.worldclock.WorldClock
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -116,7 +113,6 @@ fun CrossClockApp(
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                // Plan to separate this TopAppBar as an independent component
                 LargeTopAppBar(
                     title = {
                         Text(text = "World Clock")
@@ -170,7 +166,6 @@ fun WorldClockContent(
             .padding(padding),
         contentAlignment = Alignment.Center
     ) {
-        // should read the list from database
         LazyColumn{
             itemsIndexed(homepageList) { _, item ->
                 var currentTime by remember {

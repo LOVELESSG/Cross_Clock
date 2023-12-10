@@ -4,9 +4,7 @@ import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
-import android.icu.text.SimpleDateFormat
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,13 +18,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -34,8 +30,11 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DismissDirection.*
-import androidx.compose.material3.DismissValue.*
+import androidx.compose.material3.DismissDirection.EndToStart
+import androidx.compose.material3.DismissDirection.StartToEnd
+import androidx.compose.material3.DismissValue.Default
+import androidx.compose.material3.DismissValue.DismissedToEnd
+import androidx.compose.material3.DismissValue.DismissedToStart
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
@@ -80,17 +79,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.crossclock.data.AlarmState
 import com.example.crossclock.data.AlarmViewModel
 import com.example.crossclock.data.DRAWER_ITEMS
@@ -98,13 +93,11 @@ import com.example.crossclock.data.alarm.Alarm
 import com.example.crossclock.ui.ALL_CITIES
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Date
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -121,8 +114,6 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
     }
 
     val alarmViewModel = viewModel(modelClass = AlarmViewModel::class.java)
-    val alarmState = alarmViewModel.state
-    val alarmList = alarmState.items
 
     ModalNavigationDrawer(
         drawerState = drawerState,

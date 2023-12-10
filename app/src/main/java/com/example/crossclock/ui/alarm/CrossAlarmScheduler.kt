@@ -5,12 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.example.crossclock.Graph
-import com.example.crossclock.data.AppDatabase
-import com.example.crossclock.data.Repository
 import com.example.crossclock.data.alarm.Alarm
-import kotlinx.coroutines.flow.last
-import java.text.SimpleDateFormat
 
 class CrossAlarmScheduler(
     private val context: Context
