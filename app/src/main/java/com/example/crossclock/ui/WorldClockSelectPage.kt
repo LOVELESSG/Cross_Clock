@@ -13,6 +13,8 @@ import androidx.compose.runtime.collectAsState
 import com.example.crossclock.data.worldclock.WorldClock
 import com.example.crossclock.data.WorldClockState
 import kotlinx.coroutines.flow.Flow
+import java.time.format.TextStyle
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,7 +37,13 @@ fun WorldClockSelectPage(
                 val existItem = isChecked(timezoneInfo.city).collectAsState(initial = false).value
 
                 ListItem(
-                    headlineContent = { Text(text = timezoneInfo.city) },
+                    headlineContent = { Text(
+                        text = timezoneInfo.city
+                                +" -- "
+                                +timezoneInfo
+                                    .cityTimeZoneId
+                                    .getDisplayName(TextStyle.FULL_STANDALONE, Locale.ENGLISH)
+                    ) },
                     trailingContent = {
                         Checkbox(
                             checked = existItem,

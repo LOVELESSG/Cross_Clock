@@ -71,7 +71,7 @@ class AlarmReceiver: BroadcastReceiver() {
             .setDeleteIntent(deletePendingIntent)
             //.setWhen(System.currentTimeMillis()+15000)
             //.setOnlyAlertOnce(false)
-            //.setTimeoutAfter(30000)
+            .setTimeoutAfter(30000)
 
         val alarmNotification = notification.build()
         notificationManager.notify(24778, alarmNotification)

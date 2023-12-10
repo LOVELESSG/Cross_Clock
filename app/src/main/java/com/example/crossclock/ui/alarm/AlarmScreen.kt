@@ -253,7 +253,7 @@ fun AlarmContent(
                 SwipeToDismiss(
                     state = dismissState,
                     modifier = Modifier.padding(vertical = 0.dp),
-                    directions = setOf(StartToEnd, EndToStart),
+                    directions = setOf(EndToStart),
                     background = {
                         val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
                         val color by animateColorAsState(
