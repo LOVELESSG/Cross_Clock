@@ -164,7 +164,7 @@ fun WorldClockContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(padding),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.TopStart
     ) {
         LazyColumn{
             itemsIndexed(homepageList) { _, item ->
