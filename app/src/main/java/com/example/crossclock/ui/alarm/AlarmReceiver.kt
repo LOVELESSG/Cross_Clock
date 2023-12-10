@@ -45,13 +45,12 @@ class AlarmReceiver: BroadcastReceiver() {
             val audioAttributes = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .build()
-            //channel.setSound(alarmSound, null)
             channel.setSound(null, audioAttributes)
             notificationManager.createNotificationChannel(channel)
         }
 
         val fullScreenIntent = Intent(context, FullScreenAlarmNotification::class.java).apply {
-            putExtra("soundStatus", true)
+            putExtra("alarmMessage", message)
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(context, 0,
             fullScreenIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)

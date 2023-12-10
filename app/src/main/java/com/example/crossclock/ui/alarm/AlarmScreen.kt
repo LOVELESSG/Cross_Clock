@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -480,6 +481,7 @@ fun AddAlarm(
                             }
                         }
                     }
+                    item { Spacer(modifier = Modifier.size(16.dp)) }
                     item { 
                         TextField(
                             value = message,
