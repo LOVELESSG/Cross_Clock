@@ -33,7 +33,9 @@ class BootReceiver: BroadcastReceiver() {
                 if (alarm.onOrOff && compareTime) {
                     val alarmManager =
                         context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                    val alarmIntent = Intent(context, AlarmReceiver::class.java)
+                    val alarmIntent = Intent(context, AlarmReceiver::class.java).apply {
+                        putExtra("message", alarm.message)
+                    }
                     val pendingIntent = PendingIntent.getBroadcast(
                         context,
                         alarm.id,
