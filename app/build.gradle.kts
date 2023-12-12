@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.crossclock"
+    namespace = "com.crossware.crossclock"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.crossclock"
+        applicationId = "com.crossware.crossclock"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
