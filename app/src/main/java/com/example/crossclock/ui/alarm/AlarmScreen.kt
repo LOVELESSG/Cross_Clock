@@ -237,7 +237,9 @@ fun AlarmContent(
                 }
                 if (item.onOrOff && compareTime) {
                     item.let(scheduler::scheduler)
-                } else{
+                } else if(!item.onOrOff && compareTime){
+                    item.let(scheduler::cancel)
+                }else{
                     item.let(scheduler::cancel)
                     enableSwitch = false
                 }
