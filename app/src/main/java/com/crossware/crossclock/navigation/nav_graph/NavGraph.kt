@@ -8,6 +8,7 @@ import com.crossware.crossclock.navigation.Screen
 import com.crossware.crossclock.ui.alarm.AlarmScreen
 import com.crossware.crossclock.ui.CrossClockApp
 import com.crossware.crossclock.ui.alarm.CrossAlarmScheduler
+import com.crossware.crossclock.ui.stopwatch.StopWatchScreen
 
 @Composable
 fun SetupNavGraph(
@@ -27,6 +28,11 @@ fun SetupNavGraph(
             route = Screen.Alarm.route
         ) {
             AlarmScreen(navController = navController, alarmScheduler)
+        }
+        composable(
+            route = Screen.StopWatch.route
+        ) {
+            StopWatchScreen(navController = navController)
         }
     }
 }

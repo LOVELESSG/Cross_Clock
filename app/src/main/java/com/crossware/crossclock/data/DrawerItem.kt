@@ -11,4 +11,5 @@ data class DrawerItem(
 val DRAWER_ITEMS = arrayListOf(
     DrawerItem(R.drawable.world_clock, "home", "home_screen"),
     DrawerItem(R.drawable.baseline_access_alarms_24, "alarm", "alarm_screen"),
+    DrawerItem(R.drawable.outline_timer_24, "stopWatch", "stopWatch_screen")
 )
