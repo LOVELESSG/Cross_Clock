@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.crossware.crossclock.navigation.Screen
+import com.crossware.crossclock.service.StopWatchService
 import com.crossware.crossclock.ui.alarm.AlarmScreen
 import com.crossware.crossclock.ui.CrossClockApp
 import com.crossware.crossclock.ui.alarm.CrossAlarmScheduler
@@ -13,7 +14,8 @@ import com.crossware.crossclock.ui.stopwatch.StopWatchScreen
 @Composable
 fun SetupNavGraph(
     navController: NavHostController,
-    alarmScheduler: CrossAlarmScheduler
+    alarmScheduler: CrossAlarmScheduler,
+    stopWatchService: StopWatchService
 ) {
     NavHost(
         navController = navController,
@@ -32,7 +34,7 @@ fun SetupNavGraph(
         composable(
             route = Screen.StopWatch.route
         ) {
-            StopWatchScreen(navController = navController)
+            StopWatchScreen(navController = navController, stopWatchService = stopWatchService)
         }
     }
 }
