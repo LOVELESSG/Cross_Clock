@@ -105,7 +105,7 @@ fun StopWatchScreen(navController: NavController, stopWatchService: StopWatchSer
                         label = {
                             Text(
                                 text = (item.name),
-                                modifier = Modifier.padding(16.dp))
+                                modifier = Modifier.padding(8.dp))
                         },
                         selected = item == selectedItem.value,
                         onClick = {
@@ -181,7 +181,7 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                 Text(
                     text = targetCount,
                     style = TextStyle(
-                        fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+                        fontSize = MaterialTheme.typography.displayLarge.fontSize,
                         fontWeight = FontWeight.Bold,
                         color = if (hours == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
                     )
@@ -193,7 +193,7 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                 Text(
                     text = targetCount,
                     style = TextStyle(
-                        fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+                        fontSize = MaterialTheme.typography.displayLarge.fontSize,
                         fontWeight = FontWeight.Bold,
                         color = if (minutes == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
                     )
@@ -205,7 +205,7 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                 Text(
                     text = targetCount,
                     style = TextStyle(
-                        fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+                        fontSize = MaterialTheme.typography.displayLarge.fontSize,
                         fontWeight = FontWeight.Bold,
                         color = if (seconds == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
                     )

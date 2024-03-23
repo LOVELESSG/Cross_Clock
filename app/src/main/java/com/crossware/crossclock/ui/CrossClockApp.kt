@@ -96,7 +96,7 @@ fun CrossClockApp(
                         label = {
                             Text(
                                 text = (item.name),
-                                modifier = Modifier.padding(16.dp))
+                                modifier = Modifier.padding(8.dp))
                         },
                         selected = item == selectedItem.value,
                         onClick = {
