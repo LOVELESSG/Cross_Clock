@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
@@ -56,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -170,7 +173,7 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            modifier = Modifier.weight(weight = 9f),
+            modifier = Modifier.weight(weight = 2f),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -180,7 +183,7 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     style = TextStyle(
                         fontSize = MaterialTheme.typography.headlineLarge.fontSize,
                         fontWeight = FontWeight.Bold,
-                        color = if (hours == "00") Color.White else Color.Blue
+                        color = if (hours == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
                     )
                 )
             }
@@ -192,7 +195,7 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     style = TextStyle(
                         fontSize = MaterialTheme.typography.headlineLarge.fontSize,
                         fontWeight = FontWeight.Bold,
-                        color = if (minutes == "00") Color.White else Color.Blue
+                        color = if (minutes == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
                     )
                 )
             }
@@ -204,16 +207,20 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     style = TextStyle(
                         fontSize = MaterialTheme.typography.headlineLarge.fontSize,
                         fontWeight = FontWeight.Bold,
-                        color = if (seconds == "00") Color.White else Color.Blue
+                        color = if (seconds == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
                     )
                 )
             }
         }
-        Row(modifier = Modifier.weight(weight = 1f)) {
+        Row(
+            modifier = Modifier.weight(weight = 1f),
+            horizontalArrangement = Arrangement.Center
+        ) {
             Button(
                 modifier = Modifier
+                    .padding(start = 24.dp)
                     .weight(1f)
-                    .fillMaxHeight(0.8f),
+                    .fillMaxWidth(),
                 onClick = {
                     ServiceHelper.triggerForegroundService(
                         context = context,
@@ -222,8 +229,8 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     )
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (currentState == StopWatchState.Started) Color.Red else Color.Blue,
-                    contentColor = Color.White
+                    containerColor = if (currentState == StopWatchState.Started) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary,
+                    contentColor = if (currentState == StopWatchState.Started) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSecondary
                 )
             ) {
                 Text(
@@ -232,11 +239,12 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     else "Start"
                 )
             }
-            Spacer(modifier = Modifier.width(30.dp))
+            Spacer(modifier = Modifier.width(24.dp))
             Button(
                 modifier = Modifier
+                    .padding(end = 24.dp)
                     .weight(1f)
-                    .fillMaxHeight(0.8f),
+                    .fillMaxWidth(),
                 onClick = {
                     ServiceHelper.triggerForegroundService(
                         context = context,
@@ -244,7 +252,10 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     )
                 },
                 enabled = seconds != "00" && currentState != StopWatchState.Started,
-                colors = ButtonDefaults.buttonColors(disabledContainerColor = Color.LightGray)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surface
+                )
             ) {
                 Text(text = "Cancel")
             }
@@ -252,7 +263,7 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
     }
 }
 
-fun addAnimation(duration: Int = 600): ContentTransform {
+fun addAnimation(duration: Int = 100): ContentTransform {
     return slideInVertically(animationSpec = tween(durationMillis = duration)) { height -> height} + fadeIn(
         animationSpec = tween(durationMillis = duration)
     ) togetherWith slideOutVertically(animationSpec = tween(durationMillis = duration)) { height -> height } + fadeOut(
