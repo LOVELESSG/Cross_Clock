@@ -21,7 +21,7 @@ Cross Clock遵循了material design设计，适配了material you中的动态色
 - [x] 世界时钟
 - [x] 闹钟
 - [ ] 定时器
-- [ ] 秒表
+- [x] 秒表
 
 ## CrossWare
 Cross Clock是CrossWare系列软件的首款软件，CrossWare项目致力于开发一系列实用且符合各平台标准的软件。
