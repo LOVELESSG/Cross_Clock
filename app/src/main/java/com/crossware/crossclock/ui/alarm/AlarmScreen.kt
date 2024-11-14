@@ -9,7 +9,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,11 +29,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DismissDirection.EndToStart
-import androidx.compose.material3.DismissDirection.StartToEnd
-import androidx.compose.material3.DismissValue.Default
-import androidx.compose.material3.DismissValue.DismissedToEnd
-import androidx.compose.material3.DismissValue.DismissedToStart
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
@@ -54,7 +48,8 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -62,8 +57,8 @@ import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberDismissState
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -74,7 +69,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -220,13 +214,16 @@ fun AlarmContent(
     ) {
         LazyColumn{
             items(state.items, key = {it.id}) { item ->
-                val dismissState = rememberDismissState(
+                val dismissState = rememberSwipeToDismissBoxState(
                     confirmValueChange = {
-                        if (it == DismissedToStart) {
+                        if (it == SwipeToDismissBoxValue.EndToStart) {
                             item.let(scheduler::cancel)
                             deleteAlarm(item)
+                            true
+                        } else {
+                            false
                         }
-                        it != DismissedToStart
+                        //it != DismissedToStart
                     }
                 )
                 val itemTime = item.time.atZone(item.timeZone)
@@ -243,7 +240,62 @@ fun AlarmContent(
                     item.let(scheduler::cancel)
                     enableSwitch = false
                 }
-                SwipeToDismiss(
+                SwipeToDismissBox(
+                    state = dismissState,
+                    backgroundContent = {
+                        val direction = dismissState.dismissDirection
+                        val color by animateColorAsState(
+                            when (dismissState.targetValue) {
+                                //Default -> Color.LightGray
+                                SwipeToDismissBoxValue.StartToEnd -> Color.Green
+                                SwipeToDismissBoxValue.EndToStart -> Color.Red
+                                else -> Color.LightGray
+                            }, label = ""
+                        )
+                        val alignment = when (direction) {
+                            SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                            SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                            else -> Alignment.Center
+                        }
+                        val icon = when (direction) {
+                            SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Done
+                            SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                            else -> Icons.Default.Done
+                        }
+                        /*val scale by animateFloatAsState(
+                            if (dismissState.targetValue == Default) 0.75f else 1f, label = ""
+                        )*/
+
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(color)
+                                .padding(horizontal = 20.dp),
+                            contentAlignment = alignment
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = "Localized description",
+                                //modifier = Modifier.scale(scale)
+                            )
+                        }
+                    }
+                ) {
+                    ListItem(
+                        headlineContent = { Text(text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), fontWeight = FontWeight.Bold) },
+                        supportingContent = { Text(
+                            text = item.message) },
+                        trailingContent = { Switch(
+                            checked = item.onOrOff,
+                            onCheckedChange = {
+                                changeAlarmStatus(item)
+                            },
+                            enabled = enableSwitch
+                        )
+                        }
+                    )
+                }
+                /*SwipeToDismiss(
                     state = dismissState,
                     modifier = Modifier.padding(vertical = 0.dp),
                     directions = setOf(EndToStart),
@@ -297,7 +349,7 @@ fun AlarmContent(
                             }
                         )
                     }
-                )
+                )*/
                 HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp))
             }
         }
