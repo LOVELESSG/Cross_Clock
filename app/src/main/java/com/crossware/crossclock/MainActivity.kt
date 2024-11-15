@@ -21,7 +21,7 @@ import androidx.navigation.compose.rememberNavController
 import com.crossware.crossclock.navigation.nav_graph.SetupNavGraph
 import com.crossware.crossclock.service.StopWatchService
 import com.crossware.crossclock.ui.alarm.CrossAlarmScheduler
-import com.crossware.crossclock.ui.theme.CrossClockTheme
+import com.example.compose.CrossClockTheme
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.HiltAndroidApp
 

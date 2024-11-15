@@ -28,8 +28,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.crossware.crossclock.ui.theme.CrossClockTheme
+import com.example.compose.CrossClockTheme
 import kotlin.system.exitProcess
 
 class FullScreenAlarmNotification : ComponentActivity() {
@@ -88,7 +89,7 @@ fun WakeupAlarmPage(context: Context, message: String?) {
                     )
                 else
                     Text(
-                        text = "Alarm",
+                        text = stringResource(R.string.alarm_title),
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                     )

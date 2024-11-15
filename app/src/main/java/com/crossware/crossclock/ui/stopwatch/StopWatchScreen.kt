@@ -50,10 +50,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.crossware.crossclock.R
 import com.crossware.crossclock.data.DRAWER_ITEMS
 import com.crossware.crossclock.service.ServiceHelper
 import com.crossware.crossclock.service.StopWatchService
@@ -78,12 +80,12 @@ fun StopWatchScreen(navController: NavController, stopWatchService: StopWatchSer
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier
-                    .requiredWidth(200.dp)
+                    .requiredWidth(300.dp)
                     .fillMaxHeight()
             ) {
                 Text(
-                    text = "CrossClock",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -93,7 +95,7 @@ fun StopWatchScreen(navController: NavController, stopWatchService: StopWatchSer
                         icon = { Icon(painter = painterResource(id = item.icon), contentDescription = null) },
                         label = {
                             Text(
-                                text = (item.name),
+                                text = (stringResource(item.name)),
                                 modifier = Modifier.padding(8.dp))
                         },
                         selected = item == selectedItem.value,
@@ -117,7 +119,7 @@ fun StopWatchScreen(navController: NavController, stopWatchService: StopWatchSer
             topBar = {
                 LargeTopAppBar(
                     title = {
-                        Text(text = "StopWatch")
+                        Text(text = stringResource(R.string.stopwatch))
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
@@ -156,7 +158,6 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-            //.padding(30.dp),
             .padding(padding),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -224,9 +225,9 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
             ) {
                 Text(
                     text = when (currentState) {
-                        StopWatchState.Started -> "Stop"
-                        StopWatchState.Stopped -> "Resume"
-                        else -> "Start"
+                        StopWatchState.Started -> stringResource(R.string.stopwatch_stop)
+                        StopWatchState.Stopped -> stringResource(R.string.stopwatch_resume)
+                        else -> stringResource(R.string.stopwatch_start)
                     }
                 )
             }
@@ -248,7 +249,7 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     disabledContainerColor = MaterialTheme.colorScheme.surface
                 )
             ) {
-                Text(text = "Cancel")
+                Text(text = stringResource(R.string.stopwatch_cancel))
             }
         }
     }

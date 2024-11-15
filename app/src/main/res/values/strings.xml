@@ -1,5 +1,22 @@
 <resources>
-    <string name="app_name">Cross Clock</string>
-    <string name="title_activity_full_screen_alarm_notification">FullScreenAlarmNotification
-    </string>
+    <string name="app_name" translatable="false">Cross Clock</string>
+    <string name="title_activity_full_screen_alarm_notification" translatable="false">FullScreenAlarmNotification</string>
+
+    <string name="drawer_item1">Home</string>
+    <string name="drawer_item2">Alarm</string>
+    <string name="drawer_item3">Stopwatch</string>
+
+    <string name="world_clock">World Clock</string>
+
+    <string name="alarm_title">Alarm</string>
+    <string name="new_alarm">New Alarm</string>
+    <string name="timezone">Location of alarm</string>
+    <string name="alarm_label">Title</string>
+    <string name="alarm_label_hint">This alarm is for…</string>
+
+    <string name="stopwatch">Stop Watch</string>
+    <string name="stopwatch_start">Start</string>
+    <string name="stopwatch_stop">Stop</string>
+    <string name="stopwatch_resume">Resume</string>
+    <string name="stopwatch_cancel">Cancel</string>
 </resources>

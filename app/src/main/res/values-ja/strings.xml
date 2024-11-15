@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="drawer_item1">ホーム</string>
+    <string name="drawer_item2">世界アラーム</string>
+    <string name="drawer_item3">ストップウォッチ</string>
+
+    <string name="world_clock">世界時計</string>
+
+    <string name="alarm_title">アラーム</string>
+    <string name="new_alarm">アラームを作成する</string>
+    <string name="timezone">アラームの場所-タイムゾーン</string>
+    <string name="alarm_label">アラームのタイトル</string>
+    <string name="alarm_label_hint">タイトルを入力してください</string>
+
+    <string name="stopwatch">ストップウォッチ</string>
+    <string name="stopwatch_start">スタート</string>
+    <string name="stopwatch_stop">ストップ</string>
+    <string name="stopwatch_resume">再開</string>
+    <string name="stopwatch_cancel">キャンセル</string>
+</resources>

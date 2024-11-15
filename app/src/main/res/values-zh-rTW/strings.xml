@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="drawer_item1">主頁</string>
+    <string name="drawer_item2">世界鬧鐘</string>
+    <string name="drawer_item3">碼表</string>
+
+    <string name="world_clock">世界時鐘</string>
+
+    <string name="alarm_title">鬧鐘</string>
+    <string name="new_alarm">新建鬧鐘</string>
+    <string name="timezone">鬧鐘位置-時區</string>
+    <string name="alarm_label">鬧鐘標題</string>
+    <string name="alarm_label_hint">輸入鬧鐘標題</string>
+
+    <string name="stopwatch">碼表</string>
+    <string name="stopwatch_start">開始</string>
+    <string name="stopwatch_stop">暫停</string>
+    <string name="stopwatch_resume">繼續</string>
+    <string name="stopwatch_cancel">取消</string>
+</resources>

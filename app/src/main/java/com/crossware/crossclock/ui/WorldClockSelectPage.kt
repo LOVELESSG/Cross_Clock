@@ -48,7 +48,6 @@ fun WorldClockSelectPage(
                         Checkbox(
                             checked = existItem,
                             onCheckedChange = {
-                                Log.d("initial checked", state.items.contains(timezoneInfo).toString())
                                 if (it) {
                                     addWorldClock(timezoneInfo)
                                 } else{ removeWorldClockByName(timezoneInfo.city)}

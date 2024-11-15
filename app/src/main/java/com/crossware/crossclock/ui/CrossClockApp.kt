@@ -41,11 +41,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.crossware.crossclock.R
 import com.crossware.crossclock.data.DRAWER_ITEMS
 import com.crossware.crossclock.data.WorldClockViewModel
 import com.crossware.crossclock.data.worldclock.WorldClock
@@ -80,12 +83,12 @@ fun CrossClockApp(
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier
-                    .requiredWidth(200.dp)
+                    .requiredWidth(300.dp)
                     .fillMaxHeight()
             ) {
                 Text(
-                    text = "CrossClock",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(16.dp)
                 )
@@ -95,7 +98,7 @@ fun CrossClockApp(
                         icon = { Icon(painter = painterResource(id = item.icon), contentDescription = null) },
                         label = {
                             Text(
-                                text = (item.name),
+                                text = (stringResource(item.name)),
                                 modifier = Modifier.padding(8.dp))
                         },
                         selected = item == selectedItem.value,
@@ -115,7 +118,9 @@ fun CrossClockApp(
             topBar = {
                 LargeTopAppBar(
                     title = {
-                        Text(text = "World Clock")
+                        Text(
+                            text = stringResource(R.string.world_clock),
+                        )
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {

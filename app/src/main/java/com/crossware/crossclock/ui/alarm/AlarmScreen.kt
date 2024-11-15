@@ -42,6 +42,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -73,6 +74,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -80,6 +82,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.crossware.crossclock.R
 import com.crossware.crossclock.data.AlarmState
 import com.crossware.crossclock.data.AlarmViewModel
 import com.crossware.crossclock.data.DRAWER_ITEMS
@@ -114,12 +117,12 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
         drawerContent = {
             ModalDrawerSheet(
                 modifier = Modifier
-                    .requiredWidth(200.dp)
+                    .requiredWidth(300.dp)
                     .fillMaxHeight()
             ) {
                 Text(
-                    text = "CrossClock",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(16.dp)
                     )
@@ -129,7 +132,7 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
                         icon = { Icon(painter = painterResource(id = item.icon), contentDescription = null) },
                         label = {
                             Text(
-                                text = (item.name),
+                                text = (stringResource(item.name)),
                                 modifier = Modifier.padding(8.dp))
                                 },
                         selected = item == selectedItem.value,
@@ -153,7 +156,7 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
             topBar = {
                 LargeTopAppBar(
                     title = {
-                        Text(text = "Alarm")
+                        Text(text = stringResource(R.string.alarm_title))
                     },
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
@@ -196,7 +199,6 @@ fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmContent(
     state: AlarmState,
@@ -223,7 +225,6 @@ fun AlarmContent(
                         } else {
                             false
                         }
-                        //it != DismissedToStart
                     }
                 )
                 val itemTime = item.time.atZone(item.timeZone)
@@ -246,7 +247,6 @@ fun AlarmContent(
                         val direction = dismissState.dismissDirection
                         val color by animateColorAsState(
                             when (dismissState.targetValue) {
-                                //Default -> Color.LightGray
                                 SwipeToDismissBoxValue.StartToEnd -> Color.Green
                                 SwipeToDismissBoxValue.EndToStart -> Color.Red
                                 else -> Color.LightGray
@@ -262,9 +262,6 @@ fun AlarmContent(
                             SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
                             else -> Icons.Default.Done
                         }
-                        /*val scale by animateFloatAsState(
-                            if (dismissState.targetValue == Default) 0.75f else 1f, label = ""
-                        )*/
 
                         Box(
                             Modifier
@@ -276,10 +273,10 @@ fun AlarmContent(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = "Localized description",
-                                //modifier = Modifier.scale(scale)
                             )
                         }
-                    }
+                    },
+                    enableDismissFromStartToEnd = false
                 ) {
                     ListItem(
                         headlineContent = { Text(text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), fontWeight = FontWeight.Bold) },
@@ -295,61 +292,6 @@ fun AlarmContent(
                         }
                     )
                 }
-                /*SwipeToDismiss(
-                    state = dismissState,
-                    modifier = Modifier.padding(vertical = 0.dp),
-                    directions = setOf(EndToStart),
-                    background = {
-                        val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
-                        val color by animateColorAsState(
-                            when (dismissState.targetValue) {
-                                Default -> Color.LightGray
-                                DismissedToEnd -> Color.Green
-                                DismissedToStart -> Color.Red
-                            }, label = ""
-                        )
-                        val alignment = when (direction) {
-                            StartToEnd -> Alignment.CenterStart
-                            EndToStart -> Alignment.CenterEnd
-                        }
-                        val icon = when (direction) {
-                            StartToEnd -> Icons.Default.Done
-                            EndToStart -> Icons.Default.Delete
-                        }
-                        val scale by animateFloatAsState(
-                            if (dismissState.targetValue == Default) 0.75f else 1f, label = ""
-                        )
-
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(color)
-                                .padding(horizontal = 20.dp),
-                            contentAlignment = alignment
-                        ) {
-                            Icon(
-                                icon,
-                                contentDescription = "Localized description",
-                                modifier = Modifier.scale(scale)
-                            )
-                        }
-                    },
-                    dismissContent = {
-                        ListItem(
-                            headlineContent = { Text(text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), fontWeight = FontWeight.Bold) },
-                            supportingContent = { Text(
-                                text = item.message) },
-                            trailingContent = { Switch(
-                                checked = item.onOrOff,
-                                onCheckedChange = {
-                                    changeAlarmStatus(item)
-                                },
-                                enabled = enableSwitch
-                            )
-                            }
-                        )
-                    }
-                )*/
                 HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp))
             }
         }
@@ -430,7 +372,7 @@ fun AddAlarm(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         titleContentColor = MaterialTheme.colorScheme.primary
                     ),
-                    title = { Text(text = "New Alarm") },
+                    title = { Text(text = stringResource(R.string.new_alarm)) },
                     navigationIcon = {
                         IconButton(onClick = { changeStatus() }) {
                             Icon(
@@ -501,13 +443,16 @@ fun AddAlarm(
                             TextField(
                                 readOnly = true,
                                 value = selectedOptionText,
-                                label = { Text(text = "Location of alarm") },
+                                label = { Text(text = stringResource(R.string.timezone)) },
                                 onValueChange = {},
                                 trailingIcon = {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                                 },
                                 colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                                modifier = Modifier.menuAnchor()
+                                modifier = Modifier.menuAnchor(
+                                    type = MenuAnchorType.PrimaryNotEditable,
+                                    enabled = true
+                                )
                             )
                             ExposedDropdownMenu(
                                 expanded = expanded,
@@ -531,8 +476,8 @@ fun AddAlarm(
                         TextField(
                             value = message,
                             onValueChange = {message = it},
-                            label = {Text("Title")},
-                            placeholder = { Text(text = "Title of alarm") }
+                            label = {Text(stringResource(R.string.alarm_label))},
+                            placeholder = { Text(text = stringResource(R.string.alarm_label_hint)) }
                         )
                     }
                 }

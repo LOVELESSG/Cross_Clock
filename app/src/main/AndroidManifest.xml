@@ -18,11 +18,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CrossClock"
+        android:localeConfig="@xml/locales_config"
         tools:targetApi="31">
         <service
             android:name=".service.StopWatchService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
         <activity
             android:name=".FullScreenAlarmNotification"
             android:exported="false"
