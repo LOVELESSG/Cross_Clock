@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
@@ -15,39 +14,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DisplayMode
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
-import androidx.compose.material3.NavigationDrawerItemDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -58,22 +45,18 @@ import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -81,14 +64,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.crossware.crossclock.R
 import com.crossware.crossclock.data.AlarmState
 import com.crossware.crossclock.data.AlarmViewModel
-import com.crossware.crossclock.data.DRAWER_ITEMS
 import com.crossware.crossclock.data.alarm.Alarm
 import com.crossware.crossclock.ui.ALL_CITIES
-import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -96,106 +76,28 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlarmScreen(navController: NavController, scheduler: CrossAlarmScheduler){
-    val scope = rememberCoroutineScope()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val selectedItem = remember {
-        mutableStateOf(DRAWER_ITEMS[1])
-    }
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    var openAddAlarm by remember {
-        mutableStateOf(false)
-    }
-
+fun AlarmScreen(
+    paddingValues: PaddingValues,
+    scheduler: CrossAlarmScheduler,
+    openAddAlarmDialog: Boolean, // Added to control dialog visibility from parent
+    onDismissAddAlarmDialog: () -> Unit // Added to control dialog visibility from parent
+) {
     val alarmViewModel = viewModel(modelClass = AlarmViewModel::class.java)
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier
-                    .requiredWidth(300.dp)
-                    .fillMaxHeight()
-            ) {
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(16.dp)
-                    )
-                HorizontalDivider(modifier = Modifier.padding(0.dp, 4.dp, 0.dp, 4.dp))
-                DRAWER_ITEMS.forEach { item ->
-                    NavigationDrawerItem(
-                        icon = { Icon(painter = painterResource(id = item.icon), contentDescription = null) },
-                        label = {
-                            Text(
-                                text = (stringResource(item.name)),
-                                modifier = Modifier.padding(8.dp))
-                                },
-                        selected = item == selectedItem.value,
-                        onClick = {
-                            scope.launch { drawerState.close() }
-                            selectedItem.value = item
-                            navController.navigate(route = item.route){
-                                popUpTo(route = item.route){
-                                    inclusive = true
-                                }
-                            }
-                        },
-                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-                    )
-                }
-            }
-        }
-    ) {
-        Scaffold(
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
-                LargeTopAppBar(
-                    title = {
-                        Text(text = stringResource(R.string.alarm_title))
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(
-                                imageVector = Icons.Filled.Menu,
-                                contentDescription = "Function List"
-                            )
-                        }
-                    },
-                    scrollBehavior = scrollBehavior
-                )
-            },
-            floatingActionButton = {
-                FloatingActionButton(onClick = { openAddAlarm = !openAddAlarm }) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add a new alarm")
-                }
-            }
-        ) { padding ->
-            AlarmContent(
-                alarmViewModel.state,
-                deleteAlarm = alarmViewModel::deleteAlarm,
-                padding = padding,
-                scheduler = scheduler,
-                changeAlarmStatus = alarmViewModel::updateAlarmStatus
-            )
-            if (openAddAlarm) {
-                AddAlarm(
-                    changeStatus = { openAddAlarm = !openAddAlarm },
-                    addAlarm = alarmViewModel::addAlarm
-                )
-            }
-        }
-    }
-    BackHandler(
-        enabled = drawerState.isOpen
-    ) {
-        scope.launch {
-            drawerState.close()
-        }
+    AlarmContent(
+        alarmViewModel.state,
+        deleteAlarm = alarmViewModel::deleteAlarm,
+        padding = paddingValues,
+        scheduler = scheduler,
+        changeAlarmStatus = alarmViewModel::updateAlarmStatus
+    )
+    if (openAddAlarmDialog) {
+        AddAlarm(
+            changeStatus = onDismissAddAlarmDialog,
+            addAlarm = alarmViewModel::addAlarm
+        )
     }
 }
 
@@ -211,11 +113,11 @@ fun AlarmContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(padding),
+            .padding(padding), // Apply padding from NavHost
         contentAlignment = Alignment.TopStart
     ) {
-        LazyColumn{
-            items(state.items, key = {it.id}) { item ->
+        LazyColumn {
+            items(state.items, key = { it.id }) { item ->
                 val dismissState = rememberSwipeToDismissBoxState(
                     confirmValueChange = {
                         if (it == SwipeToDismissBoxValue.EndToStart) {
@@ -235,9 +137,9 @@ fun AlarmContent(
                 }
                 if (item.onOrOff && compareTime) {
                     item.let(scheduler::scheduler)
-                } else if(!item.onOrOff && compareTime){
+                } else if (!item.onOrOff && compareTime) {
                     item.let(scheduler::cancel)
-                }else{
+                } else {
                     item.let(scheduler::cancel)
                     enableSwitch = false
                 }
@@ -280,15 +182,19 @@ fun AlarmContent(
                 ) {
                     ListItem(
                         headlineContent = { Text(text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), fontWeight = FontWeight.Bold) },
-                        supportingContent = { Text(
-                            text = item.message) },
-                        trailingContent = { Switch(
-                            checked = item.onOrOff,
-                            onCheckedChange = {
-                                changeAlarmStatus(item)
-                            },
-                            enabled = enableSwitch
-                        )
+                        supportingContent = {
+                            Text(
+                                text = item.message
+                            )
+                        },
+                        trailingContent = {
+                            Switch(
+                                checked = item.onOrOff,
+                                onCheckedChange = {
+                                    changeAlarmStatus(item)
+                                },
+                                enabled = enableSwitch
+                            )
                         }
                     )
                 }
@@ -304,7 +210,7 @@ fun AlarmContent(
 fun AddAlarm(
     changeStatus: () -> Unit,
     addAlarm: (Alarm) -> Unit
-){
+) {
     Dialog(
         onDismissRequest = { changeStatus() },
         properties = DialogProperties(
@@ -460,7 +366,7 @@ fun AddAlarm(
                             ) {
                                 ALL_CITIES.forEach { selectionOption ->
                                     DropdownMenuItem(
-                                        text = { Text(text = selectionOption.city)},
+                                        text = { Text(text = selectionOption.city) },
                                         onClick = {
                                             selectedOptionText = selectionOption.city
                                             selectedTimeZone = selectionOption.cityTimeZoneId
@@ -472,11 +378,11 @@ fun AddAlarm(
                         }
                     }
                     item { Spacer(modifier = Modifier.size(16.dp)) }
-                    item { 
+                    item {
                         TextField(
                             value = message,
-                            onValueChange = {message = it},
-                            label = {Text(stringResource(R.string.alarm_label))},
+                            onValueChange = { message = it },
+                            label = { Text(stringResource(R.string.alarm_label)) },
                             placeholder = { Text(text = stringResource(R.string.alarm_label_hint)) }
                         )
                     }
