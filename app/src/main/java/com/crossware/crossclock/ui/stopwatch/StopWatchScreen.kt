@@ -69,39 +69,66 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val unitStyle = TextStyle(
+                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                fontWeight = FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             AnimatedContent(targetState = hours, transitionSpec = { addAnimation() }, label = "") { targetCount ->
-                Text(
-                    text = targetCount,
-                    style = TextStyle(
-                        fontSize = MaterialTheme.typography.displayLarge.fontSize,
-                        fontWeight = FontWeight.Bold,
-                        color = if (hours == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = targetCount,
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.displayLarge.fontSize,
+                            fontWeight = FontWeight.Bold,
+                            color = if (hours == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
+                        )
                     )
-                )
+                    Text(
+                        text = stringResource(R.string.stopwatch_hour_unit),
+                        style = unitStyle,
+                        modifier = Modifier.padding(bottom = 12.dp, start = 4.dp, end = 8.dp)
+                    )
+                }
             }
             AnimatedContent(targetState = minutes, transitionSpec = { addAnimation() },
                 label = ""
             ) { targetCount ->
-                Text(
-                    text = targetCount,
-                    style = TextStyle(
-                        fontSize = MaterialTheme.typography.displayLarge.fontSize,
-                        fontWeight = FontWeight.Bold,
-                        color = if (minutes == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = targetCount,
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.displayLarge.fontSize,
+                            fontWeight = FontWeight.Bold,
+                            color = if (minutes == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
+                        )
                     )
-                )
+                    Text(
+                        text = stringResource(R.string.stopwatch_minute_unit),
+                        style = unitStyle,
+                        modifier = Modifier.padding(bottom = 12.dp, start = 4.dp, end = 8.dp)
+                    )
+                }
             }
             AnimatedContent(targetState = seconds, transitionSpec = { addAnimation() },
                 label = ""
             ) { targetCount ->
-                Text(
-                    text = targetCount,
-                    style = TextStyle(
-                        fontSize = MaterialTheme.typography.displayLarge.fontSize,
-                        fontWeight = FontWeight.Bold,
-                        color = if (seconds == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        text = targetCount,
+                        style = TextStyle(
+                            fontSize = MaterialTheme.typography.displayLarge.fontSize,
+                            fontWeight = FontWeight.Bold,
+                            color = if (seconds == "00") MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.primary
+                        )
                     )
-                )
+                    Text(
+                        text = stringResource(R.string.stopwatch_second_unit),
+                        style = unitStyle,
+                        modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
+                    )
+                }
             }
         }
         Row(

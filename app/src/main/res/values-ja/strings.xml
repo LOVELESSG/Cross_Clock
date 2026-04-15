@@ -17,4 +17,8 @@
     <string name="stopwatch_stop">ストップ</string>
     <string name="stopwatch_resume">再開</string>
     <string name="stopwatch_cancel">キャンセル</string>
+
+    <string name="stopwatch_hour_unit">時</string>
+    <string name="stopwatch_minute_unit">分</string>
+    <string name="stopwatch_second_unit">秒</string>
 </resources>

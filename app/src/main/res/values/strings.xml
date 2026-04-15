@@ -19,4 +19,8 @@
     <string name="stopwatch_stop">Stop</string>
     <string name="stopwatch_resume">Resume</string>
     <string name="stopwatch_cancel">Cancel</string>
+
+    <string name="stopwatch_hour_unit">h</string>
+    <string name="stopwatch_minute_unit">m</string>
+    <string name="stopwatch_second_unit">s</string>
 </resources>
