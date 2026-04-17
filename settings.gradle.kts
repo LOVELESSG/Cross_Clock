@@ -13,5 +13,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Cross Clock"
+rootProject.name = "CrossClock"
 include(":app")
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
