@@ -1,8 +1,10 @@
 package com.crossware.crossclock.ui.alarm
 
 import android.Manifest
+import android.app.Activity
 import android.app.NotificationManager
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -31,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -74,6 +77,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -92,7 +96,13 @@ import java.time.format.FormatStyle
 
 /**
  * 闹钟页面的主入口组合项。
- * 负责展示闹钟列表，并处理添加或编辑闹钟的底部动作条。
+ * 负责展示闹钟列表，处理权限检测，并管理添加/编辑闹钟的逻辑流。
+ * 
+ * @param paddingValues 外部（Scaffold）传入的内边距。
+ * @param scheduler 闹钟调度器，用于与系统 AlarmManager 交互。
+ * @param openAddAlarmDialog 是否由外部触发打开“添加闹钟”界面。
+ * @param onDismissAddAlarmDialog 关闭添加界面的回调。
+ * @param alarmViewModel 闹钟数据管理的 ViewModel。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,9 +115,11 @@ fun AlarmScreen(
 ) {
     val context = LocalContext.current
     val notificationManager = remember { context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
+    
+    // 权限状态实时追踪
     var hasPermission by remember { mutableStateOf(notificationManager.areNotificationsEnabled()) }
 
-    // 监听生命周期，当应用回到前台时刷新权限状态
+    // 监听应用生命周期，确保当用户在系统设置中更改权限并返回应用时，UI 能及时刷新。
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -121,7 +133,9 @@ fun AlarmScreen(
         }
     }
 
-    // 全局同步：当权限状态变化时，同步所有闹钟的调度状态
+    // 全局权限同步逻辑：
+    // 1. 如果权限被关闭，立即取消系统中所有已设置的闹钟，防止无效调度。
+    // 2. 如果权限重新开启，则自动恢复所有处于“开启”状态且未过期的闹钟。
     LaunchedEffect(hasPermission, alarmViewModel.state.items) {
         alarmViewModel.state.items.forEach { item ->
             val itemTime = item.time.atZone(item.timeZone)
@@ -136,11 +150,14 @@ fun AlarmScreen(
         }
     }
 
+    // 当前正在编辑的闹钟。如果是新建，则其 ID 为默认值 0。
     var editingAlarm by remember { mutableStateOf<Alarm?>(null) }
 
+    // 响应外部添加指令
     LaunchedEffect(openAddAlarmDialog) {
         if (openAddAlarmDialog) {
             val now = LocalDateTime.now()
+            // 默认设置为下一整点
             val defaultTime = now.plusHours(1).withMinute(0).withSecond(0).withNano(0)
             editingAlarm = Alarm(
                 time = defaultTime,
@@ -152,6 +169,7 @@ fun AlarmScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+        // 如果缺失通知权限，显示警告卡片，引导用户前往系统设置
         if (!hasPermission) {
             Card(
                 modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -182,6 +200,7 @@ fun AlarmScreen(
             }
         }
 
+        // 主列表区域
         AlarmContent(
             alarmViewModel.state,
             deleteAlarm = alarmViewModel::deleteAlarm,
@@ -194,6 +213,7 @@ fun AlarmScreen(
         )
     }
     
+    // 显示底部编辑/添加动作条
     if (editingAlarm != null) {
         AlarmEditSheet(
             alarm = editingAlarm!!,
@@ -202,6 +222,7 @@ fun AlarmScreen(
                 if (openAddAlarmDialog) onDismissAddAlarmDialog()
             },
             onSave = { updatedAlarm ->
+                // 根据 ID 判断是更新已有闹钟还是插入新闹钟
                 if (updatedAlarm.id == 0) {
                     alarmViewModel.addAlarm(updatedAlarm)
                 } else {
@@ -214,6 +235,9 @@ fun AlarmScreen(
     }
 }
 
+/**
+ * 渲染闹钟列表内容，包括侧滑删除手势。
+ */
 @Composable
 fun AlarmContent(
     state: AlarmState,
@@ -231,6 +255,7 @@ fun AlarmContent(
     ) {
         LazyColumn {
             items(state.items, key = { it.id }) { item ->
+                // 实现左滑删除功能
                 val dismissState = rememberSwipeToDismissBoxState(
                     confirmValueChange = {
                         if (it == SwipeToDismissBoxValue.EndToStart) {
@@ -296,6 +321,7 @@ fun AlarmContent(
                             Text(text = item.message)
                         },
                         trailingContent = {
+                            // 仅当闹钟时间在当前时间之后时，开关才允许启用
                             Switch(
                                 checked = item.onOrOff,
                                 onCheckedChange = {
@@ -312,6 +338,10 @@ fun AlarmContent(
     }
 }
 
+/**
+ * 添加或修改闹钟信息的底部动作条。
+ * 包含时间、日期、时区选择，以及标签输入。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmEditSheet(
@@ -320,29 +350,69 @@ fun AlarmEditSheet(
     onSave: (Alarm) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
+    
+    // 内部状态维护，在保存前仅作为草稿
     var selectedTime by remember { mutableStateOf(alarm.time.toLocalTime()) }
     var selectedDate by remember { mutableStateOf(alarm.time.toLocalDate()) }
     var selectedTimeZone by remember { mutableStateOf<ZoneId?>(if (alarm.id != 0) alarm.timeZone else null) }
     var message by remember { mutableStateOf(alarm.message) }
     
+    // 子选择器显示控制
     var showTimePicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     var timezoneExpanded by remember { mutableStateOf(false) }
 
+    // 控制自定义权限引导对话框的显示
+    var showPermissionGuideDialog by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
     val notificationManager = remember { context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
     
+    // 处理权限请求的结果回调
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
+            // 权限获取成功，立即执行保存
             val finalDateTime = LocalDateTime.of(selectedDate, selectedTime)
             onSave(alarm.copy(
                 time = finalDateTime,
                 message = message,
                 timeZone = selectedTimeZone!!
             ))
+        } else {
+            // 如果拒绝了权限，检查是否是“永久拒绝”（系统不再询问）
+            val activity = context.findActivity()
+            if (activity != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // 如果 shouldShowRequestPermissionRationale 返回 false, 说明用户点击了“不再询问”或多次拒绝
+                val showRationale = ActivityCompat.shouldShowRequestPermissionRationale(activity,
+                    Manifest.permission.POST_NOTIFICATIONS)
+                if (!showRationale) {
+                    showPermissionGuideDialog = true
+                }
+            }
         }
+    }
+
+    // 自定义权限引导对话框
+    if (showPermissionGuideDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionGuideDialog = false },
+            title = { Text("需要通知权限") },
+            text = { Text("由于通知权限被多次拒绝，闹钟将无法触发，请前往设置手动开启通知权限") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showPermissionGuideDialog = false
+                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    }
+                    context.startActivity(intent)
+                }) { Text("去设置") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPermissionGuideDialog = false}) { Text("取消") }
+            }
+        )
     }
 
     ModalBottomSheet(
@@ -353,11 +423,13 @@ fun AlarmEditSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                // 支持内部滚动，配合 imePadding 防止键盘遮挡
                 .verticalScroll(rememberScrollState())
                 .imePadding()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 时间展示与修改
             ListItem(
                 headlineContent = { Text("闹钟时间", style = MaterialTheme.typography.labelMedium) },
                 supportingContent = { 
@@ -373,6 +445,7 @@ fun AlarmEditSheet(
                 }
             )
 
+            // 日期展示与修改
             ListItem(
                 modifier = Modifier.clickable { showDatePicker = true },
                 headlineContent = { Text("闹钟日期", style = MaterialTheme.typography.labelMedium) },
@@ -384,6 +457,7 @@ fun AlarmEditSheet(
                 }
             )
 
+            // 时区选择下拉列表
             ExposedDropdownMenuBox(
                 expanded = timezoneExpanded,
                 onExpandedChange = { timezoneExpanded = !timezoneExpanded }
@@ -413,6 +487,7 @@ fun AlarmEditSheet(
                 }
             }
 
+            // 闹钟备注/标签
             TextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = message,
@@ -421,13 +496,16 @@ fun AlarmEditSheet(
                 placeholder = { Text("例如：起床、开会") }
             )
 
+            // 操作按钮：保存
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
                 Button(
                     onClick = {
+                        // 保存前检查权限
                         if (notificationManager.areNotificationsEnabled()) {
+                            // 已有权限，直接保存
                             val finalDateTime = LocalDateTime.of(selectedDate, selectedTime)
                             onSave(alarm.copy(
                                 time = finalDateTime,
@@ -435,17 +513,44 @@ fun AlarmEditSheet(
                                 timeZone = selectedTimeZone!!
                             ))
                         } else {
+                            // 没有权限，尝试请求
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                val activity = context.findActivity()
+                                val showRationale = activity?.let {
+                                    ActivityCompat.shouldShowRequestPermissionRationale(it,
+                                        Manifest.permission.POST_NOTIFICATIONS)
+                                } ?: false
+
+                                // 如果系统已经不再弹出权限对话框，直接显示自定义引导
+                                if (!showRationale && activity != null) {
+                                    // 第一次请求权限时 rationale 也是 false，所以这里先launch一次
+                                    // 系统会决定时弹窗还是直接回调失败
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
                             } else {
+                                // API 33 以下直接引导去设置
                                 val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                                     putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                                 }
                                 context.startActivity(intent)
                             }
+
+
+                            // 针对 Android 13+ 的权限申请流程
+//                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+//                            } else {
+//                                // 引导用户手动开启
+//                                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+//                                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+//                                }
+//                                context.startActivity(intent)
+//                            }
                         }
                     },
-                    enabled = selectedTimeZone != null
+                    enabled = selectedTimeZone != null // 必须选择时区后才可确认
                 ) {
                     Text("完成")
                 }
@@ -454,6 +559,7 @@ fun AlarmEditSheet(
         }
     }
 
+    // 时间选择对话框
     if (showTimePicker) {
         val timePickerState = rememberTimePickerState(
             initialHour = selectedTime.hour,
@@ -490,6 +596,7 @@ fun AlarmEditSheet(
         }
     }
 
+    // 日期选择对话框
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -511,4 +618,16 @@ fun AlarmEditSheet(
             DatePicker(state = datePickerState)
         }
     }
+}
+
+/**
+ * 工具函数：从 Context 中获取Activity.
+ */
+private fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
 }

@@ -33,16 +33,20 @@ import androidx.compose.ui.unit.dp
 import com.example.compose.CrossClockTheme
 import kotlin.system.exitProcess
 
+/**
+ * 闹钟响起时的全屏展示 Activity。
+ * 该界面会在锁屏状态下弹出，允许用户查看闹钟备注并点击取消。
+ */
 class FullScreenAlarmNotification : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             CrossClockTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    // 获取从 AlarmReceiver 传递过来的闹钟消息
                     val message = intent.getStringExtra("alarmMessage")
                     WakeupAlarmPage(this, message)
                 }
@@ -51,21 +55,30 @@ class FullScreenAlarmNotification : ComponentActivity() {
     }
 }
 
+/**
+ * 唤醒闹钟界面的内容组合项。
+ * 
+ * @param context 上下文对象。
+ * @param message 闹钟显示的标签消息。
+ */
 @Composable
 fun WakeupAlarmPage(context: Context, message: String?) {
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    var pageStatus by remember {
-        mutableStateOf(false)
-    }
+    
+    // 控制是否执行取消动作
+    var pageStatus by remember { mutableStateOf(false) }
+    
+    // 拦截物理返回键，防止用户误触关闭界面而不取消闹钟
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     val backCallback = remember {
         object : OnBackPressedCallback(true){
             override fun handleOnBackPressed() {
-                false
+                // 不执行任何操作，强制用户点击界面上的取消按钮
             }
         }
     }
     backDispatcher?.addCallback(backCallback)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -77,6 +90,7 @@ fun WakeupAlarmPage(context: Context, message: String?) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 闹钟消息显示区
             Box(
                 modifier = Modifier.weight(2f),
                 contentAlignment = Alignment.Center
@@ -94,6 +108,8 @@ fun WakeupAlarmPage(context: Context, message: String?) {
                         color = MaterialTheme.colorScheme.onBackground,
                     )
             }
+            
+            // 取消按钮区
             Box(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
@@ -109,9 +125,9 @@ fun WakeupAlarmPage(context: Context, message: String?) {
         }
     }
 
+    // 执行取消闹钟的清理逻辑
     if (pageStatus) {
-        notificationManager.cancel(24778)
-        exitProcess(0)
+        notificationManager.cancel(24778) // 移除通知
+        exitProcess(0) // 结束进程以停止铃声
     }
-
 }
