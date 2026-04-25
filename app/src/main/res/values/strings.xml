@@ -23,4 +23,5 @@
     <string name="stopwatch_hour_unit">h</string>
     <string name="stopwatch_minute_unit">m</string>
     <string name="stopwatch_second_unit">s</string>
+    <string name="no_world_clock_hint">No world clock added yet.</string>
 </resources>

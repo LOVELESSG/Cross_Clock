@@ -31,51 +31,68 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.crossware.crossclock.R
+import com.crossware.crossclock.data.StopWatchViewModel
 import com.crossware.crossclock.service.ServiceHelper
-import com.crossware.crossclock.service.StopWatchService
 import com.crossware.crossclock.service.StopWatchState
 import com.crossware.crossclock.util.Constants.ACTION_SERVICE_CANCEL
 import com.crossware.crossclock.util.Constants.ACTION_SERVICE_START
 import com.crossware.crossclock.util.Constants.ACTION_SERVICE_STOP
 
+/**
+ * 秒表主界面 Composable。
+ * 负责注入 ViewModel 并将其传递给内容组件。
+ *
+ * @param paddingValues 来自 Scaffold 的内边距，用于确保内容不被导航栏遮挡。
+ * @param viewModel 通过 Hilt 自动注入的秒表逻辑管理器。
+ */
 @Composable
 fun StopWatchScreen(
     paddingValues: PaddingValues,
-    stopWatchService: StopWatchService
+    viewModel: StopWatchViewModel = hiltViewModel()
 ) {
-    StopWatchContent(stopWatchService, paddingValues)
+    StopWatchContent(viewModel, paddingValues)
 }
 
+/**
+ * 秒表具体内容界面。
+ * 包含时间显示区（带动画效果）和操作控制区（启动/停止/取消按钮）。
+ */
 @Composable
-fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues) {
+fun StopWatchContent(viewModel: StopWatchViewModel, padding: PaddingValues) {
 
     val context = LocalContext.current
-    val hours by stopWatchService.hours
-    val minutes by stopWatchService.minutes
-    val seconds by stopWatchService.seconds
-    val currentState by stopWatchService.currentState
+    // 观察 ViewModel 中的时间状态
+    val hours by viewModel.hours
+    val minutes by viewModel.minutes
+    val seconds by viewModel.seconds
+    // 观察当前秒表的运行状态（启动、停止、空闲等）
+    val currentState by viewModel.currentState
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-            .padding(padding), // Apply padding from NavHost
+            .padding(padding), // 应用导航内边距
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // --- 1. 时间显示区域 ---
         Row(
             modifier = Modifier.weight(weight = 2f),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // 时间单位（时、分、秒）的样式
             val unitStyle = TextStyle(
                 fontSize = MaterialTheme.typography.titleLarge.fontSize,
                 fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            AnimatedContent(targetState = hours, transitionSpec = { addAnimation() }, label = "") { targetCount ->
+            // 小时显示（带垂直滑动切换动画）
+            AnimatedContent(targetState = hours, transitionSpec = { addAnimation() }, label = "HoursAnimation") { targetCount ->
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
                         text = targetCount,
@@ -92,8 +109,10 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     )
                 }
             }
+
+            // 分钟显示
             AnimatedContent(targetState = minutes, transitionSpec = { addAnimation() },
-                label = ""
+                label = "MinutesAnimation"
             ) { targetCount ->
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -111,8 +130,10 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     )
                 }
             }
+
+            // 秒钟显示
             AnimatedContent(targetState = seconds, transitionSpec = { addAnimation() },
-                label = ""
+                label = "SecondsAnimation"
             ) { targetCount ->
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -131,16 +152,20 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                 }
             }
         }
+
+        // --- 2. 按钮控制区域 ---
         Row(
             modifier = Modifier.weight(weight = 1f),
             horizontalArrangement = Arrangement.Center
         ) {
+            // 启动 / 暂停 / 继续 按钮
             Button(
                 modifier = Modifier
                     .padding(start = 24.dp)
                     .weight(1f)
                     .fillMaxWidth(),
                 onClick = {
+                    // 根据当前状态，通过 ServiceHelper 切换秒表运行或停止
                     ServiceHelper.triggerForegroundService(
                         context = context,
                         action = if (currentState == StopWatchState.Started) ACTION_SERVICE_STOP
@@ -160,18 +185,23 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
                     }
                 )
             }
+
             Spacer(modifier = Modifier.width(24.dp))
+
+            // 取消 / 重置 按钮
             Button(
                 modifier = Modifier
                     .padding(end = 24.dp)
                     .weight(1f)
                     .fillMaxWidth(),
                 onClick = {
+                    // 触发取消动作，重置计时数据
                     ServiceHelper.triggerForegroundService(
                         context = context,
                         action = ACTION_SERVICE_CANCEL
                     )
                 },
+                // 仅当非计时状态且有时间累积时才启用重置
                 enabled = seconds != "00" && currentState != StopWatchState.Started,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
@@ -184,6 +214,9 @@ fun StopWatchContent(stopWatchService: StopWatchService, padding: PaddingValues)
     }
 }
 
+/**
+ * 为时间切换提供垂直滑动淡入淡出的动画配置。
+ */
 fun addAnimation(duration: Int = 100): ContentTransform {
     return slideInVertically(animationSpec = tween(durationMillis = duration)) { height -> height } + fadeIn(
         animationSpec = tween(durationMillis = duration)

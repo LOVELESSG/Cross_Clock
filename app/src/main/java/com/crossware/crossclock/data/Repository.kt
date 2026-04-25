@@ -5,11 +5,20 @@ import com.crossware.crossclock.data.alarm.AlarmDao
 import com.crossware.crossclock.data.worldclock.WorldClock
 import com.crossware.crossclock.data.worldclock.WorldClockDao
 
+/**
+ * 数据仓库类，作为应用唯一的数据源入口。
+ * 它封装了对不同数据表（世界时钟和闹钟）的 DAO 操作。
+ *
+ * @param worldClockDao 世界时钟的数据库访问对象。
+ * @param alarmDao 闹钟的数据库访问对象。
+ */
 class Repository(
     private val worldClockDao: WorldClockDao,
     private val alarmDao: AlarmDao
 ) {
-    //World Clock part
+    // --- 世界时钟部分 (World Clock) ---
+
+    // 获取所有保存的世界时钟，返回一个流
     val allWorldClock = worldClockDao.loadAllWorldClock()
 
     suspend fun insertWorldClock(worldClock: WorldClock){
@@ -28,15 +37,23 @@ class Repository(
         worldClockDao.deleteWorldClockByCityName(cityName)
     }
 
+    /**
+     * 检查数据库中是否存在指定城市的时钟。
+     */
     fun existsWorldClock(cityName: String) = worldClockDao.existsWorldClock(cityName)
 
-    // Alarm part
+    // --- 闹钟部分 (Alarm) ---
+
+    // 获取所有设置的闹钟，返回一个流
     val allAlarm = alarmDao.loadAllAlarm()
 
     suspend fun insertAlarm(alarm: Alarm) {
         alarmDao.insertAlarm(alarm)
     }
 
+    /**
+     * 更新闹钟的开关状态（开启或关闭）。
+     */
     suspend fun updateAlarmStatus(alarm: Alarm) {
         alarmDao.updateAlarmStatus(alarm.id, !alarm.onOrOff)
     }

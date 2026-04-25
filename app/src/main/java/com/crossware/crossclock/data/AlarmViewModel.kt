@@ -5,13 +5,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.crossware.crossclock.Graph
 import com.crossware.crossclock.data.alarm.Alarm
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AlarmViewModel(
-    private val repository: Repository = Graph.repository
+@HiltViewModel
+class AlarmViewModel @Inject constructor(
+    private val repository: Repository
 ): ViewModel() {
     var state by mutableStateOf(AlarmState())
         private set

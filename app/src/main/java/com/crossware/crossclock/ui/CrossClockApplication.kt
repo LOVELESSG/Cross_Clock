@@ -4,6 +4,7 @@ import android.app.Application
 import com.crossware.crossclock.Graph
 import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class CrossClockApplication: Application() {
     override fun onCreate() {
         super.onCreate()

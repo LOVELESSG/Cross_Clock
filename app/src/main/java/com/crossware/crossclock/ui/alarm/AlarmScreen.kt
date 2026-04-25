@@ -63,12 +63,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.crossware.crossclock.R
+import com.crossware.crossclock.data.ALL_CITIES
 import com.crossware.crossclock.data.AlarmState
 import com.crossware.crossclock.data.AlarmViewModel
 import com.crossware.crossclock.data.alarm.Alarm
-import com.crossware.crossclock.ui.ALL_CITIES
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -76,16 +76,26 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+/**
+ * 闹钟页面的主入口组合项。
+ * 负责展示闹钟列表，并根据 [openAddAlarmDialog] 状态决定是否显示添加闹钟的对话框。
+ *
+ * @param paddingValues 外部传入的内边距。
+ * @param scheduler 闹钟调度器，用于向系统设置定时任务。
+ * @param openAddAlarmDialog 是否打开添加闹钟对话框。
+ * @param onDismissAddAlarmDialog 关闭添加闹钟对话框的回调。
+ * @param alarmViewModel 闹钟管理的 ViewModel。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmScreen(
     paddingValues: PaddingValues,
     scheduler: CrossAlarmScheduler,
-    openAddAlarmDialog: Boolean, // Added to control dialog visibility from parent
-    onDismissAddAlarmDialog: () -> Unit // Added to control dialog visibility from parent
+    openAddAlarmDialog: Boolean,
+    onDismissAddAlarmDialog: () -> Unit,
+    alarmViewModel: AlarmViewModel = hiltViewModel()
 ) {
-    val alarmViewModel = viewModel(modelClass = AlarmViewModel::class.java)
-
+    // 渲染闹钟列表内容
     AlarmContent(
         alarmViewModel.state,
         deleteAlarm = alarmViewModel::deleteAlarm,
@@ -93,6 +103,8 @@ fun AlarmScreen(
         scheduler = scheduler,
         changeAlarmStatus = alarmViewModel::updateAlarmStatus
     )
+    
+    // 如果为真，则展示添加闹钟的全屏对话框
     if (openAddAlarmDialog) {
         AddAlarm(
             changeStatus = onDismissAddAlarmDialog,
@@ -101,6 +113,16 @@ fun AlarmScreen(
     }
 }
 
+/**
+ * 闹钟列表内容的组合项。
+ * 支持侧滑删除和开关控制。
+ *
+ * @param state 闹钟状态，包含闹钟列表。
+ * @param deleteAlarm 删除闹钟的回调。
+ * @param padding 内边距。
+ * @param scheduler 闹钟调度器。
+ * @param changeAlarmStatus 更新闹钟启用状态的回调。
+ */
 @Composable
 fun AlarmContent(
     state: AlarmState,
@@ -113,36 +135,42 @@ fun AlarmContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(padding), // Apply padding from NavHost
+            .padding(padding),
         contentAlignment = Alignment.TopStart
     ) {
         LazyColumn {
             items(state.items, key = { it.id }) { item ->
+                // 实现侧滑删除的逻辑
                 val dismissState = rememberSwipeToDismissBoxState(
                     confirmValueChange = {
                         if (it == SwipeToDismissBoxValue.EndToStart) {
-                            item.let(scheduler::cancel)
-                            deleteAlarm(item)
+                            item.let(scheduler::cancel) // 取消系统闹钟
+                            deleteAlarm(item) // 从数据库删除
                             true
                         } else {
                             false
                         }
                     }
                 )
+                
                 val itemTime = item.time.atZone(item.timeZone)
                 val nowTime = LocalDateTime.now().atZone(ZoneId.systemDefault())
                 val compareTime = nowTime.isBefore(itemTime)
                 var enableSwitch by remember {
                     mutableStateOf(true)
                 }
+                
+                // 闹钟调度逻辑：如果闹钟开启且时间未到，则设置系统闹钟；否则取消或禁用开关
                 if (item.onOrOff && compareTime) {
                     item.let(scheduler::scheduler)
                 } else if (!item.onOrOff && compareTime) {
                     item.let(scheduler::cancel)
                 } else {
                     item.let(scheduler::cancel)
-                    enableSwitch = false
+                    enableSwitch = false // 已过期
                 }
+                
+                // 渲染带滑动手势的闹钟项
                 SwipeToDismissBox(
                     state = dismissState,
                     backgroundContent = {
@@ -152,7 +180,7 @@ fun AlarmContent(
                                 SwipeToDismissBoxValue.StartToEnd -> Color.Green
                                 SwipeToDismissBoxValue.EndToStart -> Color.Red
                                 else -> Color.LightGray
-                            }, label = ""
+                            }, label = "dismissBackground"
                         )
                         val alignment = when (direction) {
                             SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
@@ -174,20 +202,24 @@ fun AlarmContent(
                         ) {
                             Icon(
                                 imageVector = icon,
-                                contentDescription = "Localized description",
+                                contentDescription = null,
                             )
                         }
                     },
                     enableDismissFromStartToEnd = false
                 ) {
                     ListItem(
-                        headlineContent = { Text(text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), fontWeight = FontWeight.Bold) },
-                        supportingContent = {
+                        headlineContent = { 
                             Text(
-                                text = item.message
-                            )
+                                text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), 
+                                fontWeight = FontWeight.Bold
+                            ) 
+                        },
+                        supportingContent = {
+                            Text(text = item.message)
                         },
                         trailingContent = {
+                            // 切换闹钟开关
                             Switch(
                                 checked = item.onOrOff,
                                 onCheckedChange = {
@@ -204,7 +236,10 @@ fun AlarmContent(
     }
 }
 
-
+/**
+ * 添加闹钟的对话框界面。
+ * 提供日期选择、时间输入、时区选择和标签输入。
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAlarm(
@@ -214,7 +249,7 @@ fun AddAlarm(
     Dialog(
         onDismissRequest = { changeStatus() },
         properties = DialogProperties(
-            usePlatformDefaultWidth = false
+            usePlatformDefaultWidth = false // 使用全屏宽度
         )
     ) {
         Surface(
@@ -225,26 +260,21 @@ fun AddAlarm(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // 日期选择状态
                 val datePickerState = rememberDatePickerState(
                     initialDisplayMode = DisplayMode.Input,
                     initialSelectedDateMillis = Instant.now().toEpochMilli()
                 )
+                // 时间选择状态
                 val timePickerState = rememberTimePickerState(is24Hour = false)
-                var expanded by remember {
-                    mutableStateOf(false)
-                }
-                var selectedOptionText by remember {
-                    mutableStateOf("")
-                }
-                var selectedTimeZone: ZoneId? by remember {
-                    mutableStateOf(null)
-                }
-                var message by rememberSaveable {
-                    mutableStateOf("")
-                }
-                var localDateTime by remember {
-                    mutableStateOf(LocalDateTime.now())
-                }
+                
+                var expanded by remember { mutableStateOf(false) }
+                var selectedOptionText by remember { mutableStateOf("") }
+                var selectedTimeZone: ZoneId? by remember { mutableStateOf(null) }
+                var message by rememberSaveable { mutableStateOf("") }
+                var localDateTime by remember { mutableStateOf(LocalDateTime.now()) }
+                
+                // 根据选择的日期和时间更新本地日期时间对象
                 if (datePickerState.selectedDateMillis != null && selectedTimeZone != null) {
                     localDateTime = LocalDateTime.of(
                         datePickerState.selectedDateMillis?.let {
@@ -253,9 +283,12 @@ fun AddAlarm(
                         LocalTime.of(timePickerState.hour, timePickerState.minute)
                     )
                 }
+                
                 var alarmItem: Alarm?
                 val context = LocalContext.current
                 val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                
+                // 处理通知权限
                 var hasNotificationPermission by remember {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         mutableStateOf(
@@ -283,12 +316,13 @@ fun AddAlarm(
                         IconButton(onClick = { changeStatus() }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back to the alarm list"
+                                contentDescription = "Back"
                             )
                         }
                     },
                     actions = {
                         IconButton(onClick = {
+                            // 保存闹钟前的逻辑：检查通知权限，然后创建并添加闹钟
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 when (manager.areNotificationsEnabled()) {
                                     true -> {
@@ -302,7 +336,6 @@ fun AddAlarm(
                                         alarmItem?.let { addAlarm(it) }
                                         alarmItem?.let { changeStatus() }
                                     }
-
                                     false -> {
                                         requestPermissionLauncher.launch(
                                             Manifest.permission.POST_NOTIFICATIONS
@@ -323,7 +356,7 @@ fun AddAlarm(
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Done,
-                                contentDescription = "Save this alarm"
+                                contentDescription = "Save"
                             )
                         }
                     }
@@ -340,11 +373,10 @@ fun AddAlarm(
                         TimeInput(state = timePickerState, modifier = Modifier.padding(16.dp))
                     }
                     item {
+                        // 时区选择下拉框
                         ExposedDropdownMenuBox(
                             expanded = expanded,
-                            onExpandedChange = {
-                                expanded = !expanded
-                            }
+                            onExpandedChange = { expanded = !expanded }
                         ) {
                             TextField(
                                 readOnly = true,
@@ -379,6 +411,7 @@ fun AddAlarm(
                     }
                     item { Spacer(modifier = Modifier.size(16.dp)) }
                     item {
+                        // 闹钟标签输入
                         TextField(
                             value = message,
                             onValueChange = { message = it },

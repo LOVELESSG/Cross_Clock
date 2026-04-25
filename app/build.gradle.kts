@@ -94,4 +94,5 @@ dependencies {
 
     // Add support for navigation
     implementation(libs.androidx.navigation.compose)
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 }
