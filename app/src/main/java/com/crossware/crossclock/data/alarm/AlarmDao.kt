@@ -12,6 +12,9 @@ interface AlarmDao {
     @Insert
     suspend fun insertAlarm(alarm: Alarm): Long
 
+    @androidx.room.Update
+    suspend fun updateAlarm(alarm: Alarm)
+
     @Query("update Alarm set onOrOff = :onOrOff where id = :id")
     suspend fun updateAlarmStatus(id:Int, onOrOff: Boolean)
 

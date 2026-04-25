@@ -51,6 +51,10 @@ class Repository(
         alarmDao.insertAlarm(alarm)
     }
 
+    suspend fun updateAlarm(alarm: Alarm) {
+        alarmDao.updateAlarm(alarm)
+    }
+
     /**
      * 更新闹钟的开关状态（开启或关闭）。
      */

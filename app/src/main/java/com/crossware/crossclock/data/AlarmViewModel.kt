@@ -48,6 +48,12 @@ class AlarmViewModel @Inject constructor(
             repository.updateAlarmStatus(alarm)
         }
     }
+
+    fun updateAlarm(alarm: Alarm) {
+        viewModelScope.launch {
+            repository.updateAlarm(alarm)
+        }
+    }
 }
 
 data class AlarmState(
