@@ -10,9 +10,28 @@
 
     <string name="alarm_title">Alarm</string>
     <string name="new_alarm">New Alarm</string>
+    <string name="alarm_location">Time Zone</string>
     <string name="timezone">Location of alarm</string>
     <string name="alarm_label">Title</string>
     <string name="alarm_label_hint">This alarm is for…</string>
+    <string name="alarm_time">Time</string>
+    <string name="alarm_date">Date</string>
+    <string name="add_alarm">Add</string>
+    <string name="edit_alarm">Edit</string>
+    <string name="select_time">Set Time</string>
+    <string name="cancel_select_time">Cancel</string>
+    <string name="confirm_select_time">Confirm</string>
+    <string name="cancel_select_date">Cancel</string>
+    <string name="confirm_select_date">Confirm</string>
+    <string name="no_alarm_hint">No alarm created yet.</string>
+
+    <string name="notification_warn_title">Notification are off</string>
+    <string name="notification_warn_text">Notification permission is disabled, alarms cannot be triggered. Please enable notification permissions.</string>
+    <string name="enable_notification">Enable notification</string>
+
+    <string name="require_notification_permission_title">Notification permission required</string>
+    <string name="require_notification_permission_text">The alarm cannot be triggered because notification permissions have been denied multiple times. Please go to settings to manually enable notification permissions.</string>
+    <string name="close_permission_dialog">Cancel</string>
 
     <string name="stopwatch">Stop Watch</string>
     <string name="stopwatch_start">Start</string>

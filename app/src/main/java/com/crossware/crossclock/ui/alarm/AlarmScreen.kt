@@ -74,6 +74,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -82,6 +83,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.crossware.crossclock.R
 import com.crossware.crossclock.data.ALL_CITIES
 import com.crossware.crossclock.data.AlarmState
 import com.crossware.crossclock.data.AlarmViewModel
@@ -185,8 +187,8 @@ fun AlarmScreen(
                     Icon(Icons.Default.Warning, contentDescription = null)
                     Spacer(Modifier.size(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "通知权限已关闭", fontWeight = FontWeight.Bold)
-                        Text(text = "闹钟将无法触发提醒，请开启权限。", style = MaterialTheme.typography.bodySmall)
+                        Text(text = stringResource(R.string.notification_warn_title), fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.notification_warn_text), style = MaterialTheme.typography.bodySmall)
                     }
                     TextButton(onClick = {
                         val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -194,7 +196,7 @@ fun AlarmScreen(
                         }
                         context.startActivity(intent)
                     }) {
-                        Text("去设置")
+                        Text(stringResource(R.string.enable_notification))
                     }
                 }
             }
@@ -253,86 +255,100 @@ fun AlarmContent(
             .padding(padding),
         contentAlignment = Alignment.TopStart
     ) {
-        LazyColumn {
-            items(state.items, key = { it.id }) { item ->
-                // 实现左滑删除功能
-                val dismissState = rememberSwipeToDismissBoxState(
-                    confirmValueChange = {
-                        if (it == SwipeToDismissBoxValue.EndToStart) {
-                            item.let(scheduler::cancel)
-                            deleteAlarm(item)
-                            true
-                        } else {
-                            false
-                        }
-                    }
+        if (state.items.isEmpty()) {
+            // 当列表为空时，在屏幕中央显示提示文本
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.no_alarm_hint),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
-                val itemTime = item.time.atZone(item.timeZone)
-                val nowTime = LocalDateTime.now().atZone(ZoneId.systemDefault())
-                val compareTime = nowTime.isBefore(itemTime)
-                
-                SwipeToDismissBox(
-                    state = dismissState,
-                    backgroundContent = {
-                        val direction = dismissState.dismissDirection
-                        val color by animateColorAsState(
-                            when (dismissState.targetValue) {
-                                SwipeToDismissBoxValue.StartToEnd -> Color.Green
-                                SwipeToDismissBoxValue.EndToStart -> Color.Red
-                                else -> Color.LightGray
-                            }, label = "dismissBackground"
-                        )
-                        val alignment = when (direction) {
-                            SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-                            SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                            else -> Alignment.Center
-                        }
-                        val icon = when (direction) {
-                            SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Done
-                            SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
-                            else -> Icons.Default.Done
-                        }
-
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(color)
-                                .padding(horizontal = 20.dp),
-                            contentAlignment = alignment
-                        ) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                    enableDismissFromStartToEnd = false
-                ) {
-                    ListItem(
-                        modifier = Modifier.clickable { onEditAlarm(item) },
-                        headlineContent = { 
-                            Text(
-                                text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), 
-                                fontWeight = FontWeight.Bold
-                            ) 
-                        },
-                        supportingContent = {
-                            Text(text = item.message)
-                        },
-                        trailingContent = {
-                            // 仅当闹钟时间在当前时间之后时，开关才允许启用
-                            Switch(
-                                checked = item.onOrOff,
-                                onCheckedChange = {
-                                    changeAlarmStatus(item)
-                                },
-                                enabled = compareTime
-                            )
+            }
+        } else {
+            LazyColumn {
+                items(state.items, key = { it.id }) { item ->
+                    // 实现左滑删除功能
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = {
+                            if (it == SwipeToDismissBoxValue.EndToStart) {
+                                item.let(scheduler::cancel)
+                                deleteAlarm(item)
+                                true
+                            } else {
+                                false
+                            }
                         }
                     )
+                    
+                    val itemTime = item.time.atZone(item.timeZone)
+                    val nowTime = LocalDateTime.now().atZone(ZoneId.systemDefault())
+                    val compareTime = nowTime.isBefore(itemTime)
+                    
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        backgroundContent = {
+                            val direction = dismissState.dismissDirection
+                            val color by animateColorAsState(
+                                when (dismissState.targetValue) {
+                                    SwipeToDismissBoxValue.StartToEnd -> Color.Green
+                                    SwipeToDismissBoxValue.EndToStart -> Color.Red
+                                    else -> Color.LightGray
+                                }, label = "dismissBackground"
+                            )
+                            val alignment = when (direction) {
+                                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                                else -> Alignment.Center
+                            }
+                            val icon = when (direction) {
+                                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Done
+                                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                                else -> Icons.Default.Done
+                            }
+
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = alignment
+                            ) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                        enableDismissFromStartToEnd = false
+                    ) {
+                        ListItem(
+                            modifier = Modifier.clickable { onEditAlarm(item) },
+                            headlineContent = { 
+                                Text(
+                                    text = item.time.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.SHORT)), 
+                                    fontWeight = FontWeight.Bold
+                                ) 
+                            },
+                            supportingContent = {
+                                Text(text = item.message)
+                            },
+                            trailingContent = {
+                                // 仅当闹钟时间在当前时间之后时，开关才允许启用
+                                Switch(
+                                    checked = item.onOrOff,
+                                    onCheckedChange = {
+                                        changeAlarmStatus(item)
+                                    },
+                                    enabled = compareTime
+                                )
+                            }
+                        )
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp))
                 }
-                HorizontalDivider(modifier = Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp))
             }
         }
     }
@@ -398,8 +414,8 @@ fun AlarmEditSheet(
     if (showPermissionGuideDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionGuideDialog = false },
-            title = { Text("需要通知权限") },
-            text = { Text("由于通知权限被多次拒绝，闹钟将无法触发，请前往设置手动开启通知权限") },
+            title = { Text(stringResource(R.string.require_notification_permission_title)) },
+            text = { Text(stringResource(R.string.require_notification_permission_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     showPermissionGuideDialog = false
@@ -407,10 +423,10 @@ fun AlarmEditSheet(
                         putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                     }
                     context.startActivity(intent)
-                }) { Text("去设置") }
+                }) { Text(stringResource(R.string.enable_notification)) }
             },
             dismissButton = {
-                TextButton(onClick = { showPermissionGuideDialog = false}) { Text("取消") }
+                TextButton(onClick = { showPermissionGuideDialog = false}) { Text(stringResource(R.string.close_permission_dialog)) }
             }
         )
     }
@@ -431,7 +447,7 @@ fun AlarmEditSheet(
         ) {
             // 时间展示与修改
             ListItem(
-                headlineContent = { Text("闹钟时间", style = MaterialTheme.typography.labelMedium) },
+                headlineContent = { Text(stringResource(R.string.alarm_time), style = MaterialTheme.typography.labelMedium) },
                 supportingContent = { 
                     Text(
                         text = selectedTime.format(DateTimeFormatter.ofPattern("HH:mm")),
@@ -440,7 +456,7 @@ fun AlarmEditSheet(
                 },
                 trailingContent = {
                     Button(onClick = { showTimePicker = true }) {
-                        Text("修改")
+                        Text(stringResource(R.string.edit_alarm))
                     }
                 }
             )
@@ -448,7 +464,7 @@ fun AlarmEditSheet(
             // 日期展示与修改
             ListItem(
                 modifier = Modifier.clickable { showDatePicker = true },
-                headlineContent = { Text("闹钟日期", style = MaterialTheme.typography.labelMedium) },
+                headlineContent = { Text(stringResource(R.string.alarm_date), style = MaterialTheme.typography.labelMedium) },
                 supportingContent = {
                     Text(
                         text = selectedDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)),
@@ -465,8 +481,8 @@ fun AlarmEditSheet(
                 TextField(
                     modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
                     readOnly = true,
-                    value = ALL_CITIES.find { it.cityTimeZoneId == selectedTimeZone }?.city ?: "请选择时区",
-                    label = { Text("时区") },
+                    value = ALL_CITIES.find { it.cityTimeZoneId == selectedTimeZone }?.city ?: stringResource(R.string.timezone),
+                    label = { Text(stringResource(R.string.alarm_location)) },
                     onValueChange = {},
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = timezoneExpanded) },
                     colors = ExposedDropdownMenuDefaults.textFieldColors()
@@ -492,8 +508,8 @@ fun AlarmEditSheet(
                 modifier = Modifier.fillMaxWidth(),
                 value = message,
                 onValueChange = { message = it },
-                label = { Text("闹钟标签") },
-                placeholder = { Text("例如：起床、开会") }
+                label = { Text(stringResource(R.string.alarm_label)) },
+                placeholder = { Text(stringResource(R.string.alarm_label_hint)) }
             )
 
             // 操作按钮：保存
@@ -536,23 +552,11 @@ fun AlarmEditSheet(
                                 }
                                 context.startActivity(intent)
                             }
-
-
-                            // 针对 Android 13+ 的权限申请流程
-//                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-//                            } else {
-//                                // 引导用户手动开启
-//                                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-//                                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-//                                }
-//                                context.startActivity(intent)
-//                            }
                         }
                     },
                     enabled = selectedTimeZone != null // 必须选择时区后才可确认
                 ) {
-                    Text("完成")
+                    Text(stringResource(R.string.add_alarm))
                 }
             }
             Spacer(modifier = Modifier.size(32.dp))
@@ -577,7 +581,7 @@ fun AlarmEditSheet(
                 ) {
                     Text(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
-                        text = "选择时间",
+                        text = stringResource(R.string.select_time),
                         style = MaterialTheme.typography.labelMedium
                     )
                     TimePicker(state = timePickerState)
@@ -585,11 +589,11 @@ fun AlarmEditSheet(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        TextButton(onClick = { showTimePicker = false }) { Text("取消") }
+                        TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel_select_time)) }
                         TextButton(onClick = {
                             selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
                             showTimePicker = false
-                        }) { Text("确定") }
+                        }) { Text(stringResource(R.string.confirm_select_time)) }
                     }
                 }
             }
@@ -609,10 +613,10 @@ fun AlarmEditSheet(
                         selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                     }
                     showDatePicker = false
-                }) { Text("确定") }
+                }) { Text(stringResource(R.string.confirm_select_date)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("取消") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel_select_date)) }
             }
         ) {
             DatePicker(state = datePickerState)

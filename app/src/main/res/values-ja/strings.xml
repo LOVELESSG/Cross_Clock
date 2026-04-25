@@ -8,10 +8,13 @@
 
     <string name="alarm_title">アラーム</string>
     <string name="new_alarm">アラームを作成する</string>
-    <string name="timezone">アラームの場所-タイムゾーン</string>
+    <string name="alarm_location">タイムゾーン</string>
+    <string name="timezone">アラームの場所</string>
     <string name="alarm_label">アラームのタイトル</string>
     <string name="alarm_label_hint">タイトルを入力してください</string>
 
+    <string name="edit_alarm">修正</string>
+    <string name="close_permission_dialog">キャンセル</string>
     <string name="stopwatch">ストップウォッチ</string>
     <string name="stopwatch_start">スタート</string>
     <string name="stopwatch_stop">ストップ</string>
@@ -22,4 +25,18 @@
     <string name="stopwatch_minute_unit">分</string>
     <string name="stopwatch_second_unit">秒</string>
     <string name="no_world_clock_hint">世界時計は追加されていません</string>
+    <string name="alarm_time">時間</string>
+    <string name="alarm_date">日付</string>
+    <string name="add_alarm">追加</string>
+    <string name="select_time">設定時間</string>
+    <string name="cancel_select_time">キャンセル</string>
+    <string name="confirm_select_time">確認</string>
+    <string name="cancel_select_date">キャンセル</string>
+    <string name="confirm_select_date">確認</string>
+    <string name="no_alarm_hint">アラームは追加されていません。</string>
+    <string name="notification_warn_title">アラーム通知はオフです</string>
+    <string name="notification_warn_text">通知権限が無効になっているため、アラームを作動させることができません。通知権限を有効にしてください。</string>
+    <string name="enable_notification">通知を有効にする</string>
+    <string name="require_notification_permission_title">通知権限が必要です</string>
+    <string name="require_notification_permission_text">通知権限が複数回拒否されているため、アラームを作動させることができません。設定画面から通知権限を手動で有効にしてください。</string>
 </resources>

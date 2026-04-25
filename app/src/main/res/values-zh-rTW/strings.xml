@@ -8,10 +8,13 @@
 
     <string name="alarm_title">鬧鐘</string>
     <string name="new_alarm">新建鬧鐘</string>
-    <string name="timezone">鬧鐘位置-時區</string>
+    <string name="alarm_location">時區</string>
+    <string name="timezone">鬧鐘位置</string>
     <string name="alarm_label">鬧鐘標題</string>
     <string name="alarm_label_hint">輸入鬧鐘標題</string>
 
+    <string name="edit_alarm">修改</string>
+    <string name="close_permission_dialog">取消</string>
     <string name="stopwatch">碼表</string>
     <string name="stopwatch_start">開始</string>
     <string name="stopwatch_stop">暫停</string>
@@ -21,4 +24,18 @@
     <string name="stopwatch_minute_unit">分</string>
     <string name="stopwatch_second_unit">秒</string>
     <string name="no_world_clock_hint">未添加世界時鐘</string>
+    <string name="alarm_time">時間</string>
+    <string name="alarm_date">日期</string>
+    <string name="add_alarm">完成</string>
+    <string name="select_time">選擇時間</string>
+    <string name="cancel_select_time">取消</string>
+    <string name="confirm_select_time">確認</string>
+    <string name="cancel_select_date">取消</string>
+    <string name="confirm_select_date">確認</string>
+    <string name="no_alarm_hint">未添加鬧鐘</string>
+    <string name="notification_warn_title">通知權限未開啓</string>
+    <string name="notification_warn_text">通知權限未開啓，鬧鐘無法被觸發，請開啓通知權限。</string>
+    <string name="enable_notification">去開啓</string>
+    <string name="require_notification_permission_title">需要通知權限</string>
+    <string name="require_notification_permission_text">由於通知權限被多次拒絕，鬧鐘無法觸發，請前往設定手動開啟通知權限。</string>
 </resources>
