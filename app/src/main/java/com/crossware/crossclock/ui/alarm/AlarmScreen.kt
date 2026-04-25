@@ -179,17 +179,16 @@ fun AlarmContent(
                 val itemTime = item.time.atZone(item.timeZone)
                 val nowTime = LocalDateTime.now().atZone(ZoneId.systemDefault())
                 val compareTime = nowTime.isBefore(itemTime)
-                var enableSwitch by remember { mutableStateOf(true) }
                 
-                if (item.onOrOff && compareTime) {
-                    item.let(scheduler::scheduler)
-                } else if (!item.onOrOff && compareTime) {
-                    item.let(scheduler::cancel)
-                } else {
-                    item.let(scheduler::cancel)
-                    enableSwitch = false
+                // 调度逻辑：在副作用中处理，避免在 Composition 期间直接执行
+                LaunchedEffect(item.onOrOff, item.time, item.timeZone) {
+                    if (item.onOrOff && compareTime) {
+                        scheduler.scheduler(item)
+                    } else {
+                        scheduler.cancel(item)
+                    }
                 }
-                
+
                 SwipeToDismissBox(
                     state = dismissState,
                     backgroundContent = {
@@ -244,7 +243,7 @@ fun AlarmContent(
                                 onCheckedChange = {
                                     changeAlarmStatus(item)
                                 },
-                                enabled = enableSwitch
+                                enabled = compareTime // 直接根据是否过期决定开关是否可用
                             )
                         }
                     )
