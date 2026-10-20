@@ -12,7 +12,7 @@ android {
     defaultConfig {
         applicationId = "com.crossware.crossclock"
         minSdk = 26
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 6
         versionName = "2.0"
 
@@ -94,5 +94,5 @@ dependencies {
 
     // Add support for navigation
     implementation(libs.androidx.navigation.compose)
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation(libs.androidx.hilt.navigation.compose)
 }
