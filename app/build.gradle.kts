@@ -13,8 +13,8 @@ android {
         applicationId = "com.crossware.crossclock"
         minSdk = 26
         targetSdk = 37
-        versionCode = 6
-        versionName = "2.0"
+        versionCode = 7
+        versionName = "3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
