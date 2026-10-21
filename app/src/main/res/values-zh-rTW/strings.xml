@@ -38,4 +38,11 @@
     <string name="enable_notification">去開啓</string>
     <string name="require_notification_permission_title">需要通知權限</string>
     <string name="require_notification_permission_text">由於通知權限被多次拒絕，鬧鐘無法觸發，請前往設定手動開啟通知權限。</string>
+
+    <string name="search_city_hint">搜尋城市名稱或時區…</string>
+    <string name="search_online">線上搜尋「%s」</string>
+    <string name="searching_online">正在線上搜尋…</string>
+    <string name="local_cities_section">本地預設城市</string>
+    <string name="online_cities_section">線上搜尋結果</string>
+    <string name="no_cities_found">未找到匹配的城市。</string>
 </resources>

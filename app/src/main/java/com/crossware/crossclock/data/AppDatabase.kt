@@ -16,7 +16,7 @@ import com.crossware.crossclock.data.worldclock.WorldClockDao
  * 应用的主数据库类，使用 Room 持久化库。
  * 包含 'WorldClock' 和 'Alarm' 两个实体表。
  */
-@Database(entities = [WorldClock::class, Alarm::class], version = 1, exportSchema = false)
+@Database(entities = [WorldClock::class, Alarm::class], version = 2, exportSchema = false)
 @TypeConverters(ZoneIdConverter::class, LocalDateTimeConverter::class)
 abstract class AppDatabase: RoomDatabase() {
 
@@ -37,6 +37,7 @@ abstract class AppDatabase: RoomDatabase() {
         fun getDatabase(context: Context): AppDatabase{
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, AppDatabase::class.java, "app_database")
+                    .fallbackToDestructiveMigration()
                     .build()
                     .also { Instance = it }
             }

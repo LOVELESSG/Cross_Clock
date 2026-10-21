@@ -185,11 +185,11 @@ fun CrossClockApp(
         // 如果状态为真，显示世界时钟选择页面（底部抽屉效果）
         if (openWorldClockBottomSheet) {
             WorldClockSelectPage(
-                worldClockViewModel.state,
+                state = worldClockViewModel.state,
                 changeStatus = { openWorldClockBottomSheet = !openWorldClockBottomSheet },
                 addWorldClock = worldClockViewModel::addWorldClock,
-                removeWorldClockByName = worldClockViewModel::deleteWorldClockByName,
-                isChecked = worldClockViewModel::existWorldClock
+                deleteWorldClock = worldClockViewModel::deleteWorldClock,
+                removeWorldClockByName = worldClockViewModel::deleteWorldClockByName
             )
         }
     }
@@ -221,16 +221,50 @@ fun WorldClockContent(
                 Text(text = stringResource(R.string.no_world_clock_hint))
             }
         } else {
+            // 按基础城市名称进行分组，精准判定同名城市与同国家重复情况
+            val cityGroupMap = remember(homepageList) {
+                homepageList.groupBy { it.getDisplayCityName() }
+            }
+
             // 滚动列表展示时钟
             LazyColumn {
-                itemsIndexed(homepageList) { _, item ->
+                itemsIndexed(homepageList, key = { index, item -> "world_clock_${item.id}_$index" }) { _, item ->
+                    val cityName = item.getDisplayCityName()
+                    val countryName = item.getDisplayCountry()
+                    val adminArea = item.getDisplayAdminArea()
+
+                    val sameCityList = cityGroupMap[cityName] ?: emptyList()
+                    val isDuplicateCity = sameCityList.size > 1
+
+                    val displayHeadline = if (!isDuplicateCity) {
+                        // 1. 默认情况：没有同名城市，仅显示城市名
+                        cityName
+                    } else {
+                        // 2. 存在同名城市，判断同城市名下相同的国家数量
+                        val sameCountryCount = sameCityList.count {
+                            val c = it.getDisplayCountry()
+                            !c.isNullOrBlank() && c.equals(countryName, ignoreCase = true)
+                        }
+                        val isDuplicateCountry = sameCountryCount > 1
+
+                        if (isDuplicateCountry && !adminArea.isNullOrBlank() && !countryName.isNullOrBlank()) {
+                            // 3. 城市名与国家名均相同：展示完整的城市名、省/州名和国家名
+                            "$cityName ($adminArea, $countryName)"
+                        } else if (!countryName.isNullOrBlank()) {
+                            // 4. 仅城市名相同，国家不同：在城市名后展示国家名
+                            "$cityName ($countryName)"
+                        } else {
+                            cityName
+                        }
+                    }
+
                     // 根据时区 ID 获取并格式化当前时间
                     val currentTime = remember(tick) {
                         LocalTime.now(item.cityTimeZoneId)
                             .format(DateTimeFormatter.ofPattern("HH:mm"))
                     }
                     ListItem(
-                        headlineContent = { Text(text = item.city, fontWeight = FontWeight.Bold) },
+                        headlineContent = { Text(text = displayHeadline, fontWeight = FontWeight.Bold) },
                         supportingContent = {
                             // 显示对应城市的日期
                             Text(

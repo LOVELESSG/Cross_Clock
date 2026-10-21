@@ -88,6 +88,7 @@ import com.crossware.crossclock.data.ALL_CITIES
 import com.crossware.crossclock.data.AlarmState
 import com.crossware.crossclock.data.AlarmViewModel
 import com.crossware.crossclock.data.alarm.Alarm
+import com.crossware.crossclock.ui.components.CitySearchContent
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -376,7 +377,8 @@ fun AlarmEditSheet(
     // 子选择器显示控制
     var showTimePicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
-    var timezoneExpanded by remember { mutableStateOf(false) }
+    var showTimeZonePickerSheet by remember { mutableStateOf(false) }
+    var selectedTimeZoneName by remember { mutableStateOf("") }
 
     // 控制自定义权限引导对话框的显示
     var showPermissionGuideDialog by remember { mutableStateOf(false) }
@@ -473,35 +475,24 @@ fun AlarmEditSheet(
                 }
             )
 
-            // 时区选择下拉列表
-            ExposedDropdownMenuBox(
-                expanded = timezoneExpanded,
-                onExpandedChange = { timezoneExpanded = !timezoneExpanded }
-            ) {
-                TextField(
-                    modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    readOnly = true,
-                    value = ALL_CITIES.find { it.cityTimeZoneId == selectedTimeZone }?.city ?: stringResource(R.string.timezone),
-                    label = { Text(stringResource(R.string.alarm_location)) },
-                    onValueChange = {},
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = timezoneExpanded) },
-                    colors = ExposedDropdownMenuDefaults.textFieldColors()
-                )
-                ExposedDropdownMenu(
-                    expanded = timezoneExpanded,
-                    onDismissRequest = { timezoneExpanded = false }
-                ) {
-                    ALL_CITIES.forEach { cityInfo ->
-                        DropdownMenuItem(
-                            text = { Text(cityInfo.city) },
-                            onClick = {
-                                selectedTimeZone = cityInfo.cityTimeZoneId
-                                timezoneExpanded = false
-                            }
-                        )
+            // 时区选择器
+            ListItem(
+                modifier = Modifier.clickable { showTimeZonePickerSheet = true },
+                headlineContent = { Text(stringResource(R.string.alarm_location), style = MaterialTheme.typography.labelMedium) },
+                supportingContent = {
+                    val displayName = if (selectedTimeZone != null) {
+                        selectedTimeZoneName.ifBlank {
+                            ALL_CITIES.find { it.cityTimeZoneId == selectedTimeZone }?.city ?: selectedTimeZone!!.id
+                        }
+                    } else {
+                        stringResource(R.string.timezone)
                     }
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
-            }
+            )
 
             // 闹钟备注/标签
             TextField(
@@ -620,6 +611,22 @@ fun AlarmEditSheet(
             }
         ) {
             DatePicker(state = datePickerState)
+        }
+    }
+
+    // 混合模式时区搜索与选择 BottomSheet
+    if (showTimeZonePickerSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showTimeZonePickerSheet = false }
+        ) {
+            CitySearchContent(
+                isMultiSelect = false,
+                onCitySelected = { searchResult ->
+                    selectedTimeZone = searchResult.zoneId
+                    selectedTimeZoneName = searchResult.displayLocationName
+                    showTimeZonePickerSheet = false
+                }
+            )
         }
     }
 }

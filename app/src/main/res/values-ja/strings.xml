@@ -39,4 +39,11 @@
     <string name="enable_notification">通知を有効にする</string>
     <string name="require_notification_permission_title">通知権限が必要です</string>
     <string name="require_notification_permission_text">通知権限が複数回拒否されているため、アラームを作動させることができません。設定画面から通知権限を手動で有効にしてください。</string>
+
+    <string name="search_city_hint">都市名またはタイムゾーンを検索…</string>
+    <string name="search_online">「%s」をオンライン検索</string>
+    <string name="searching_online">オンライン検索中…</string>
+    <string name="local_cities_section">プリセット都市</string>
+    <string name="online_cities_section">オンライン検索結果</string>
+    <string name="no_cities_found">一致する都市が見つかりません。</string>
 </resources>

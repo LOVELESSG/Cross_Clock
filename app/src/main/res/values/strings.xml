@@ -43,4 +43,11 @@
     <string name="stopwatch_minute_unit">m</string>
     <string name="stopwatch_second_unit">s</string>
     <string name="no_world_clock_hint">No world clock added yet.</string>
+
+    <string name="search_city_hint">Search city or timezone…</string>
+    <string name="search_online">Search online for \"%s\"</string>
+    <string name="searching_online">Searching online…</string>
+    <string name="local_cities_section">Local Preset Cities</string>
+    <string name="online_cities_section">Online Search Results</string>
+    <string name="no_cities_found">No matching cities found.</string>
 </resources>
