@@ -8,16 +8,19 @@ import androidx.room.TypeConverters
 import com.crossware.crossclock.data.alarm.Alarm
 import com.crossware.crossclock.data.alarm.AlarmDao
 import com.crossware.crossclock.data.converter.LocalDateTimeConverter
+import com.crossware.crossclock.data.converter.TimerConverters
 import com.crossware.crossclock.data.converter.ZoneIdConverter
+import com.crossware.crossclock.data.timer.TimerDao
+import com.crossware.crossclock.data.timer.TimerEntity
 import com.crossware.crossclock.data.worldclock.WorldClock
 import com.crossware.crossclock.data.worldclock.WorldClockDao
 
 /**
  * 应用的主数据库类，使用 Room 持久化库。
- * 包含 'WorldClock' 和 'Alarm' 两个实体表。
+ * 包含 'WorldClock'、'Alarm' 和 'Timer' 三个实体表。
  */
-@Database(entities = [WorldClock::class, Alarm::class], version = 2, exportSchema = false)
-@TypeConverters(ZoneIdConverter::class, LocalDateTimeConverter::class)
+@Database(entities = [WorldClock::class, Alarm::class, TimerEntity::class], version = 3, exportSchema = false)
+@TypeConverters(ZoneIdConverter::class, LocalDateTimeConverter::class, TimerConverters::class)
 abstract class AppDatabase: RoomDatabase() {
 
     /** 获取世界时钟的 DAO */
@@ -25,6 +28,9 @@ abstract class AppDatabase: RoomDatabase() {
     
     /** 获取闹钟的 DAO */
     abstract fun alarmDao(): AlarmDao
+
+    /** 获取计时器的 DAO */
+    abstract fun timerDao(): TimerDao
 
     companion object {
         @Volatile

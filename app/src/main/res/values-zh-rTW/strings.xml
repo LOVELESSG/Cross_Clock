@@ -3,6 +3,7 @@
     <string name="drawer_item1">主頁</string>
     <string name="drawer_item2">世界鬧鐘</string>
     <string name="drawer_item3">碼表</string>
+    <string name="drawer_item4">計時器</string>
 
     <string name="world_clock">世界時鐘</string>
 
@@ -24,6 +25,38 @@
     <string name="stopwatch_minute_unit">分</string>
     <string name="stopwatch_second_unit">秒</string>
     <string name="no_world_clock_hint">未添加世界時鐘</string>
+
+    <string name="add_timer">新增計時器</string>
+    <string name="edit_timer">編輯計時器</string>
+    <string name="save_timer">儲存計時器</string>
+    <string name="timer_title">計時器名稱</string>
+    <string name="timer_type">計時器類型</string>
+    <string name="timer_type_single">單獨計時器</string>
+    <string name="timer_type_linear">線性計時器</string>
+    <string name="timer_type_loop">循環計時器</string>
+    <string name="loop_count_title">循環設定</string>
+    <string name="loop_count_label">循環次數</string>
+    <string name="infinite_loop">無限循環</string>
+    <string name="loop_x_times">循環 %d 次</string>
+    <string name="timer_steps_title">串聯單獨計時器</string>
+    <string name="add_step">新增步驟</string>
+    <string name="step_name">步驟名稱</string>
+    <string name="minutes">分鐘</string>
+    <string name="seconds">秒</string>
+    <string name="card_color">卡片顏色</string>
+    <string name="enter_timer">進入計時</string>
+    <string name="delete_timer">刪除</string>
+    <string name="no_timer_hint">未建立任何計時器。</string>
+    <string name="next_step">下一個: %s</string>
+    <string name="loop_status">第 %1$d / %2$d 輪循環</string>
+    <string name="loop_infinite_status">第 %d 輪 (無限循環)</string>
+    <string name="timer_complete">計時器運行完成！</string>
+    <string name="notification_pause">暫停</string>
+    <string name="notification_resume">繼續</string>
+    <string name="notification_stop">停止</string>
+    <string name="delete_confirm_title">刪除計時器</string>
+    <string name="delete_confirm_text">確定要刪除計時器「%s」嗎？</string>
+    <string name="confirm_delete">確認刪除</string>
     <string name="alarm_time">時間</string>
     <string name="alarm_date">日期</string>
     <string name="add_alarm">完成</string>

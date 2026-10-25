@@ -2,19 +2,24 @@ package com.crossware.crossclock.data
 
 import com.crossware.crossclock.data.alarm.Alarm
 import com.crossware.crossclock.data.alarm.AlarmDao
+import com.crossware.crossclock.data.timer.TimerDao
+import com.crossware.crossclock.data.timer.TimerEntity
 import com.crossware.crossclock.data.worldclock.WorldClock
 import com.crossware.crossclock.data.worldclock.WorldClockDao
+import kotlinx.coroutines.flow.Flow
 
 /**
  * 数据仓库类，作为应用唯一的数据源入口。
- * 它封装了对不同数据表（世界时钟和闹钟）的 DAO 操作。
+ * 它封装了对不同数据表（世界时钟、闹钟、计时器）的 DAO 操作。
  *
  * @param worldClockDao 世界时钟的数据库访问对象。
  * @param alarmDao 闹钟的数据库访问对象。
+ * @param timerDao 计时器的数据库访问对象。
  */
 class Repository(
     private val worldClockDao: WorldClockDao,
-    private val alarmDao: AlarmDao
+    private val alarmDao: AlarmDao,
+    private val timerDao: TimerDao
 ) {
     // --- 世界时钟部分 (World Clock) ---
 
@@ -65,4 +70,16 @@ class Repository(
     suspend fun deleteAlarm(alarm: Alarm) {
         alarmDao.deleteAlarm(alarm)
     }
+
+    // --- 计时器部分 (Timer) ---
+
+    val allTimers: Flow<List<TimerEntity>> = timerDao.loadAllTimers()
+
+    fun getTimerById(id: Long): Flow<TimerEntity?> = timerDao.getTimerById(id)
+
+    suspend fun insertTimer(timer: TimerEntity): Long = timerDao.insertTimer(timer)
+
+    suspend fun updateTimer(timer: TimerEntity) = timerDao.updateTimer(timer)
+
+    suspend fun deleteTimer(timer: TimerEntity) = timerDao.deleteTimer(timer)
 }

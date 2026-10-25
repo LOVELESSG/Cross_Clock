@@ -1,12 +1,7 @@
 package com.crossware.crossclock
 
-import android.app.Application
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Bundle
-import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,14 +13,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.crossware.crossclock.data.EXTRA_NAVIGATE_TO
+import com.crossware.crossclock.data.EXTRA_TIMER_ID
 import com.crossware.crossclock.navigation.nav_graph.SetupNavGraph
-import com.crossware.crossclock.service.StopWatchService
 import com.crossware.crossclock.ui.alarm.CrossAlarmScheduler
 import com.example.compose.CrossClockTheme
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.HiltAndroidApp
-
-
 
 /**
  * 应用的主 Activity。
@@ -36,34 +29,42 @@ import dagger.hilt.android.HiltAndroidApp
 class MainActivity : ComponentActivity() {
 
     private lateinit var navController: NavHostController
+    private var deepLinkRoute by mutableStateOf<String?>(null)
+    private var deepLinkTimerId by mutableStateOf<Long?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // 初始化闹钟调度器，用于在应用中管理闹钟任务。
         val scheduler = CrossAlarmScheduler(this)
-        
+        parseIntent(intent)
+
         setContent {
-            // 应用自定义主题
             CrossClockTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // 初始化 NavHostController 以管理 Compose 导航栈
                     navController = rememberNavController()
-                    
-                    // 设置导航图，将导航控制器和闹钟调度器传递给 SetupNavGraph
+
                     SetupNavGraph(
                         navController = navController,
-                        alarmScheduler = scheduler
+                        alarmScheduler = scheduler,
+                        deepLinkRoute = deepLinkRoute,
+                        deepLinkTimerId = deepLinkTimerId
                     )
                 }
             }
         }
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        parseIntent(intent)
+    }
+
+    private fun parseIntent(intent: Intent?) {
+        deepLinkRoute = intent?.getStringExtra(EXTRA_NAVIGATE_TO)
+        val timerId = intent?.getLongExtra(EXTRA_TIMER_ID, -1L) ?: -1L
+        deepLinkTimerId = if (timerId != -1L) timerId else null
     }
 }
