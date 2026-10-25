@@ -24,5 +24,7 @@ val DRAWER_ITEMS = arrayListOf(
     // 闹钟管理页面项
     DrawerItem(R.drawable.baseline_access_alarms_24, R.string.drawer_item2, "alarm_screen"),
     // 秒表页面项
-    DrawerItem(R.drawable.outline_timer_24, R.string.drawer_item3, "stopWatch_screen")
+    DrawerItem(R.drawable.outline_timer_24, R.string.drawer_item3, "stopWatch_screen"),
+    // 计时器页面项
+    DrawerItem(R.drawable.outline_timer_24, R.string.drawer_item4, "timer_screen")
 )

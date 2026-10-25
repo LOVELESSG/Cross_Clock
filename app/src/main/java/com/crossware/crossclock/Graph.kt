@@ -10,7 +10,8 @@ object Graph {
     val repository by lazy {
         Repository(
             worldClockDao = db.worldClockDao(),
-            alarmDao = db.alarmDao()
+            alarmDao = db.alarmDao(),
+            timerDao = db.timerDao()
         )
     }
 

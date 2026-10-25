@@ -3,6 +3,7 @@
     <string name="drawer_item1">ホーム</string>
     <string name="drawer_item2">世界アラーム</string>
     <string name="drawer_item3">ストップウォッチ</string>
+    <string name="drawer_item4">タイマー</string>
 
     <string name="world_clock">世界時計</string>
 
@@ -25,6 +26,38 @@
     <string name="stopwatch_minute_unit">分</string>
     <string name="stopwatch_second_unit">秒</string>
     <string name="no_world_clock_hint">世界時計は追加されていません</string>
+
+    <string name="add_timer">タイマーを追加</string>
+    <string name="edit_timer">タイマーを編集</string>
+    <string name="save_timer">タイマーを保存</string>
+    <string name="timer_title">タイマー名</string>
+    <string name="timer_type">タイマータイプ</string>
+    <string name="timer_type_single">シングル</string>
+    <string name="timer_type_linear">リニアグループ</string>
+    <string name="timer_type_loop">ループグループ</string>
+    <string name="loop_count_title">ループ設定</string>
+    <string name="loop_count_label">ループ回数</string>
+    <string name="infinite_loop">無限ループ</string>
+    <string name="loop_x_times">%d 回ループ</string>
+    <string name="timer_steps_title">ステップ</string>
+    <string name="add_step">ステップ追加</string>
+    <string name="step_name">ステップ名</string>
+    <string name="minutes">分</string>
+    <string name="seconds">秒</string>
+    <string name="card_color">カード色</string>
+    <string name="enter_timer">タイマー開始</string>
+    <string name="delete_timer">削除</string>
+    <string name="no_timer_hint">タイマーが作成されていません。</string>
+    <string name="next_step">次: %s</string>
+    <string name="loop_status">ループ %1$d / %2$d</string>
+    <string name="loop_infinite_status">ループ %d (無限)</string>
+    <string name="timer_complete">タイマー完了！</string>
+    <string name="notification_pause">一時停止</string>
+    <string name="notification_resume">再開</string>
+    <string name="notification_stop">停止</string>
+    <string name="delete_confirm_title">タイマーを削除</string>
+    <string name="delete_confirm_text">タイマー「%s」を削除してもよろしいですか？</string>
+    <string name="confirm_delete">削除</string>
     <string name="alarm_time">時間</string>
     <string name="alarm_date">日付</string>
     <string name="add_alarm">追加</string>

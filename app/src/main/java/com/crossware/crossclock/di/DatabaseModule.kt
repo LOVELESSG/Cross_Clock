@@ -4,6 +4,7 @@ import android.content.Context
 import com.crossware.crossclock.data.AppDatabase
 import com.crossware.crossclock.data.Repository
 import com.crossware.crossclock.data.alarm.AlarmDao
+import com.crossware.crossclock.data.timer.TimerDao
 import com.crossware.crossclock.data.worldclock.WorldClockDao
 import dagger.Module
 import dagger.Provides
@@ -32,12 +33,18 @@ object DatabaseModule {
         return appDatabase.alarmDao()
     }
 
+    @Provides
+    fun provideTimerDao(appDatabase: AppDatabase): TimerDao {
+        return appDatabase.timerDao()
+    }
+
     @Singleton
     @Provides
     fun provideRepository(
         worldClockDao: WorldClockDao,
-        alarmDao: AlarmDao
+        alarmDao: AlarmDao,
+        timerDao: TimerDao
     ): Repository {
-        return Repository(worldClockDao, alarmDao)
+        return Repository(worldClockDao, alarmDao, timerDao)
     }
 }
