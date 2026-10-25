@@ -43,6 +43,12 @@
     <string name="stopwatch_hour_unit">h</string>
     <string name="stopwatch_minute_unit">m</string>
     <string name="stopwatch_second_unit">s</string>
+    <string name="stopwatch_history_laps">Lap History</string>
+    <string name="stopwatch_laps_count">%d Laps</string>
+    <string name="stopwatch_clear_history">Clear Records</string>
+    <string name="stopwatch_current_lap">Current Lap: %s</string>
+    <string name="stopwatch_best_lap">Best Lap</string>
+    <string name="stopwatch_segment_record">Lap Record</string>
     <string name="no_world_clock_hint">No world clock added yet.</string>
 
     <string name="add_timer">Add Timer</string>
