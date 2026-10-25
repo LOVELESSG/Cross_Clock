@@ -25,6 +25,12 @@
     <string name="stopwatch_hour_unit">时</string>
     <string name="stopwatch_minute_unit">分</string>
     <string name="stopwatch_second_unit">秒</string>
+    <string name="stopwatch_history_laps">历史计次</string>
+    <string name="stopwatch_laps_count">%d 圈</string>
+    <string name="stopwatch_clear_history">清除记录</string>
+    <string name="stopwatch_current_lap">当前计次: %s</string>
+    <string name="stopwatch_best_lap">最佳单圈</string>
+    <string name="stopwatch_segment_record">分段记录</string>
     <string name="no_world_clock_hint">未添加世界时钟</string>
 
     <string name="add_timer">添加计时器</string>
