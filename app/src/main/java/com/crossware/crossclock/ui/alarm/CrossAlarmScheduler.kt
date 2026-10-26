@@ -21,22 +21,25 @@ class CrossAlarmScheduler(
 
     /**
      * 安排一个精确的闹钟。
-     * 使用 setExactAndAllowWhileIdle 确保在设备处于低功耗模式时也能触发。
-     *
-     * @param item 包含闹钟时间、消息和时区信息的闹钟对象。
+     * 基于闹钟的目标唤醒时区 (timeZone) 精准计算下一次触发的绝对 UTC 时间戳。
      */
     override fun scheduler(item: Alarm) {
+        if (!item.onOrOff || item.isExpired()) return
+
+        val triggerMillis = item.getNextTriggerZonedDateTime().toInstant().toEpochMilli()
+
         alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP, // 使用真实时间触发，并唤醒设备
-            item.time.atZone(item.timeZone).toEpochSecond() * 1000, // 转换为毫秒时间戳
+            AlarmManager.RTC_WAKEUP,
+            triggerMillis,
             PendingIntent.getBroadcast(
                 context,
-                item.id, // 使用闹钟 ID 作为请求码，以便后续取消或更新
+                item.id,
                 intent.apply {
-                    // 将闹钟信息放入 Intent 传递给 Receiver
                     putExtra("message", item.message)
                     putExtra("time", item.time.toLocalTime().toString())
                     putExtra("id", item.id)
+                    putExtra("ringtoneUri", item.ringtoneUri)
+                    putExtra("ringtoneTitle", item.ringtoneTitle)
                 },
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
@@ -45,8 +48,6 @@ class CrossAlarmScheduler(
 
     /**
      * 取消一个已安排的闹钟。
-     *
-     * @param item 要取消的闹钟对象。
      */
     override fun cancel(item: Alarm) {
         alarmManager.cancel(

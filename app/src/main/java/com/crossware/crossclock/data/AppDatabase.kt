@@ -19,7 +19,7 @@ import com.crossware.crossclock.data.worldclock.WorldClockDao
  * 应用的主数据库类，使用 Room 持久化库。
  * 包含 'WorldClock'、'Alarm' 和 'Timer' 三个实体表。
  */
-@Database(entities = [WorldClock::class, Alarm::class, TimerEntity::class], version = 3, exportSchema = false)
+@Database(entities = [WorldClock::class, Alarm::class, TimerEntity::class], version = 4, exportSchema = false)
 @TypeConverters(ZoneIdConverter::class, LocalDateTimeConverter::class, TimerConverters::class)
 abstract class AppDatabase: RoomDatabase() {
 
