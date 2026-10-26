@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
 
     <application
         android:name=".ui.CrossClockApplication"
@@ -22,6 +24,7 @@
         android:theme="@style/Theme.CrossClock"
         android:localeConfig="@xml/locales_config"
         tools:targetApi="31">
+
         <service
             android:name=".service.StopWatchService"
             android:enabled="true"
@@ -30,15 +33,26 @@
                 android:name="autoStoreLocales"
                 android:value="true" />
         </service>
+
+        <service
+            android:name=".ui.alarm.AlarmRingtoneService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
         <activity
             android:name=".FullScreenAlarmNotification"
             android:exported="false"
-            android:showOnLockScreen="true"
+            android:excludeFromRecents="true"
             android:launchMode="singleInstance"
+            android:taskAffinity="com.crossware.crossclock.alarm.fullscreen"
+            android:noHistory="true"
+            android:showOnLockScreen="true"
             android:turnScreenOn="true"
             android:showWhenLocked="true"
             android:label="@string/title_activity_full_screen_alarm_notification"
             android:theme="@style/Theme.CrossClock" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
