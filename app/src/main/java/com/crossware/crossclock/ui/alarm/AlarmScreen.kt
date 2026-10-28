@@ -264,12 +264,12 @@ private fun SwipeableAlarmCard(
             .height(130.dp),
         contentAlignment = Alignment.CenterEnd
     ) {
-        // 背景侧滑显露的红色删除按键（仅保留图标，无文字）
+        // 背景侧滑显露的红色删除按键（使用 matchParentSize 与卡片高度完全对齐）
         Surface(
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.errorContainer,
             modifier = Modifier
-                .fillMaxSize()
+                .matchParentSize()
                 .clickable { onDelete() }
         ) {
             Box(

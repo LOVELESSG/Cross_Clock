@@ -2,10 +2,15 @@ package com.crossware.crossclock.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,42 +19,56 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.ListItem
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -57,6 +76,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.crossware.crossclock.R
+import com.crossware.crossclock.data.ALL_CITIES
 import com.crossware.crossclock.data.DRAWER_ITEMS
 import com.crossware.crossclock.data.TimerViewModel
 import com.crossware.crossclock.data.WorldClockViewModel
@@ -70,19 +90,18 @@ import com.crossware.crossclock.ui.timer.TimerEditBottomSheet
 import com.crossware.crossclock.ui.timer.TimerRunningScreen
 import com.crossware.crossclock.ui.timer.TimerScreen
 import com.crossware.crossclock.ui.timer.TimerWidgetPill
-import java.time.LocalDate
-import java.time.LocalTime
+import com.crossware.crossclock.util.WorldClockUtils
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * 应用的主 UI 组合项。
  * 负责构建应用的整体布局，包括顶部栏 (TopAppBar)、底部导航栏 (NavigationBar) 和悬浮按钮 (FloatingActionButton)。
  * 同时集成了 NavHost 来处理页面切换。
- *
- * @param navController 导航控制器，用于页面跳转。
- * @param alarmScheduler 闹钟调度器，用于在闹钟页面管理闹钟。
- * @param deepLinkRoute 外部 DeepLink 或通知打入的目标路由名称。
- * @param deepLinkTimerId 通知关联的目标计时器 ID。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,63 +111,38 @@ fun CrossClockApp(
     deepLinkRoute: String? = null,
     deepLinkTimerId: Long? = null
 ) {
-    // 控制世界时钟选择底部列表的显示状态
-    var openWorldClockBottomSheet by rememberSaveable {
-        mutableStateOf(false)
-    }
-    // 控制添加闹钟对话框的显示状态
-    var openAlarmAddDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
+    var openWorldClockBottomSheet by rememberSaveable { mutableStateOf(false) }
+    var openAlarmAddDialog by rememberSaveable { mutableStateOf(false) }
+    var openTimerAddSheet by rememberSaveable { mutableStateOf(false) }
+    var editingTimer by remember { mutableStateOf<TimerEntity?>(null) }
+    var isTimerListExpanded by remember { mutableStateOf(false) }
 
-    // 控制添加/编辑计时器 BottomSheet 的显示状态
-    var openTimerAddSheet by rememberSaveable {
-        mutableStateOf(false)
-    }
-    var editingTimer by remember {
-        mutableStateOf<TimerEntity?>(null)
-    }
-
-    // 控制多计时器候选展开列表状态
-    var isTimerListExpanded by remember {
-        mutableStateOf(false)
-    }
-
-    // 顶部栏滚动行为，实现在滚动列表时顶部栏收起的效果
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     
-    // ViewModel 获取
     val worldClockViewModel: WorldClockViewModel = hiltViewModel()
     val worldClockState = worldClockViewModel.state
     val homepageList = worldClockState.items
 
     val timerViewModel: TimerViewModel = hiltViewModel()
 
-    // 监听外部通知或 DeepLink 打入，精准选定目标计时器并跳转至全屏界面
     LaunchedEffect(deepLinkRoute, deepLinkTimerId) {
         if (deepLinkRoute == Screen.TimerRunning.route) {
             if (deepLinkTimerId != null) {
                 timerViewModel.selectActiveTimer(deepLinkTimerId)
             }
             if (timerViewModel.selectedActiveTimer != null) {
-                navController.navigate(Screen.TimerRunning.route) {
-                    launchSingleTop = true
-                }
+                navController.navigate(Screen.TimerRunning.route) { launchSingleTop = true }
             }
         }
     }
 
-    // 获取当前导航栈的信息，用于确定当前处于哪个页面
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
-    // 如果处于全屏倒计时界面，隐藏主界面 Scaffold（返回时不取消/停止计时器）
     if (currentRoute == Screen.TimerRunning.route) {
         TimerRunningScreen(
             timerViewModel = timerViewModel,
-            onExit = {
-                navController.popBackStack()
-            }
+            onExit = { navController.popBackStack() }
         )
         return
     }
@@ -157,19 +151,15 @@ fun CrossClockApp(
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                // 大型顶部标题栏
                 LargeTopAppBar(
                     title = {
                         val titleResId = DRAWER_ITEMS.find { it.route == currentRoute }?.name ?: R.string.app_name
-                        Text(
-                            text = stringResource(titleResId),
-                        )
+                        Text(text = stringResource(titleResId))
                     },
                     scrollBehavior = scrollBehavior
                 )
             },
             bottomBar = {
-                // 底部导航栏
                 NavigationBar {
                     DRAWER_ITEMS.forEach { item ->
                         NavigationBarItem(
@@ -179,9 +169,7 @@ fun CrossClockApp(
                             onClick = {
                                 navController.navigate(route = item.route) {
                                     navController.graph.startDestinationRoute?.let { route ->
-                                        popUpTo(route) {
-                                            saveState = true
-                                        }
+                                        popUpTo(route) { saveState = true }
                                     }
                                     launchSingleTop = true
                                     restoreState = true
@@ -192,7 +180,6 @@ fun CrossClockApp(
                 }
             },
             floatingActionButton = {
-                // 根据当前页面显示不同的悬浮按钮功能
                 when (currentRoute) {
                     Screen.Home.route -> {
                         FloatingActionButton(onClick = { openWorldClockBottomSheet = !openWorldClockBottomSheet }) {
@@ -205,7 +192,6 @@ fun CrossClockApp(
                         }
                     }
                     Screen.Timer.route -> {
-                        // 仅当没有活跃运行的计时器时，显示 Scaffold 的默认 FAB
                         if (timerViewModel.activeTimers.isEmpty()) {
                             FloatingActionButton(onClick = {
                                 editingTimer = null
@@ -218,18 +204,20 @@ fun CrossClockApp(
                 }
             }
         ) { paddingValues ->
-            // 导航容器，承载不同的屏幕内容
             NavHost(
                 navController = navController,
                 startDestination = Screen.Home.route,
                 modifier = Modifier.padding(paddingValues)
             ) {
-                // 世界时钟页面
                 composable(Screen.Home.route) {
                     val tick by worldClockViewModel.currentTimeTick.collectAsState()
-                    WorldClockContent(homepageList, tick, PaddingValues(0.dp))
+                    WorldClockContent(
+                        homepageList = homepageList,
+                        tick = tick,
+                        padding = PaddingValues(0.dp),
+                        onDeleteWorldClock = worldClockViewModel::deleteWorldClock
+                    )
                 }
-                // 闹钟管理页面
                 composable(Screen.Alarm.route) {
                     AlarmScreen(
                         paddingValues = PaddingValues(0.dp),
@@ -238,13 +226,9 @@ fun CrossClockApp(
                         onDismissAddAlarmDialog = { openAlarmAddDialog = false }
                     )
                 }
-                // 秒表页面
                 composable(Screen.StopWatch.route) {
-                    StopWatchScreen(
-                        paddingValues = PaddingValues(0.dp)
-                    )
+                    StopWatchScreen(paddingValues = PaddingValues(0.dp))
                 }
-                // 计时器页面
                 composable(Screen.Timer.route) {
                     TimerScreen(
                         paddingValues = PaddingValues(0.dp),
@@ -269,18 +253,14 @@ fun CrossClockApp(
                         onToggleExpand = { isTimerListExpanded = !isTimerListExpanded }
                     )
                 }
-                // 计时器走时全屏画面
                 composable(Screen.TimerRunning.route) {
                     TimerRunningScreen(
                         timerViewModel = timerViewModel,
-                        onExit = {
-                            navController.popBackStack()
-                        }
+                        onExit = { navController.popBackStack() }
                     )
                 }
             }
 
-            // 显示世界时钟选择页面
             if (openWorldClockBottomSheet) {
                 WorldClockSelectPage(
                     state = worldClockViewModel.state,
@@ -291,7 +271,6 @@ fun CrossClockApp(
                 )
             }
 
-            // 显示添加/编辑计时器表单 Sheet
             if (openTimerAddSheet) {
                 TimerEditBottomSheet(
                     timer = editingTimer,
@@ -312,16 +291,13 @@ fun CrossClockApp(
             }
         }
 
-        // 全局半透明蒙版 & 运行中的候选计时器列表（覆盖包含 TopAppBar 和 NavigationBar 在内的整个屏幕）
         val activeTimers = timerViewModel.activeTimers
         val focusedTimer = timerViewModel.selectedActiveTimer
         if (isTimerListExpanded && activeTimers.size > 1 && focusedTimer != null) {
-            // 拦截展开候选计时器列表时的系统返回按键与手势：在蒙版显示时注册 BackHandler，使其注册顺序晚于 NavHost，从而具备最高拦截优先级，优先关闭展开列表而非退出当前页面
             BackHandler(enabled = true) {
                 isTimerListExpanded = false
             }
 
-            // 1. 全屏半透明蒙版：遮罩包括 TopAppBar、NavigationBar、FAB在内的整个屏幕，点击蒙版空白处直接关闭列表
             AnimatedVisibility(
                 visible = isTimerListExpanded,
                 enter = fadeIn(),
@@ -335,7 +311,6 @@ fun CrossClockApp(
                 )
             }
 
-            // 2. 蒙版之上的最顶层内容：在 NavigationBar 正上方展开候选计时器列表 + 底部聚焦计时器
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -343,7 +318,6 @@ fun CrossClockApp(
                     .padding(start = 16.dp, end = 16.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // 候选区运行中的其他计时器列表（不含任何标题栏或关闭按键）
                 val candidateTimers = activeTimers.filter { it.timer.id != focusedTimer.timer.id }
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -369,7 +343,6 @@ fun CrossClockApp(
                             },
                             onExpandClick = { },
                             onCardClick = {
-                                // 点击候选区非按钮区域：切换底部聚焦计时器并关闭展开列表（不进入全屏）
                                 timerViewModel.selectActiveTimer(candidate.timer.id)
                                 isTimerListExpanded = false
                             }
@@ -377,7 +350,6 @@ fun CrossClockApp(
                     }
                 }
 
-                // 底部聚焦计时器卡片（在蒙版之上悬浮保持清晰展示）
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -410,7 +382,6 @@ fun CrossClockApp(
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    // 右侧占位（保持底部 Row 与 FAB 宽度精准对齐）
                     Box(modifier = Modifier.size(56.dp))
                 }
             }
@@ -420,82 +391,479 @@ fun CrossClockApp(
 
 /**
  * 世界时钟主内容的组合项。
- * 展示用户已添加的所有城市时钟列表。
- *
- * @param homepageList 用户添加的世界时钟列表。
- * @param tick 触发时间更新的计数器，用于实时刷新 UI。
- * @param padding 内边距。
  */
 @Composable
 fun WorldClockContent(
     homepageList: List<WorldClock>,
     tick: Long,
-    padding: PaddingValues
+    padding: PaddingValues,
+    onDeleteWorldClock: (WorldClock) -> Unit = {}
 ) {
-    Box(
+    val locale = LocalConfiguration.current.locales[0]
+    val nowInstant = remember(tick) { Instant.ofEpochMilli(tick) }
+
+    // 本地系统时区及城市名称解析
+    val localZoneId = remember { ZoneId.systemDefault() }
+    val localCityInfo = remember(localZoneId) {
+        ALL_CITIES.find { it.cityTimeZoneId == localZoneId }
+    }
+    val localCityName = localCityInfo?.city ?: "东京"
+    val localZdt = remember(tick) { ZonedDateTime.ofInstant(nowInstant, localZoneId) }
+
+    val localTimeStr = localZdt.format(DateTimeFormatter.ofPattern("HH:mm", locale))
+    val localDateStr = localZdt.format(DateTimeFormatter.ofPattern("MM月dd日 EEEE", locale))
+    val localOffsetStr = WorldClockUtils.getTimeZoneOffsetString(localZoneId, nowInstant)
+    val (localPeriodDesc, localDaylightProgress) = WorldClockUtils.getTimePeriodAndProgress(localZoneId, nowInstant)
+    val sunCountdownStr = WorldClockUtils.getSunCountdownText(localZoneId, nowInstant)
+    val isDaytime = localZdt.hour in 6..18
+    val sunIcon = if (isDaytime) "☀️" else "🌙"
+
+    // 检测同名城市
+    val cityGroupMap = remember(homepageList) {
+        homepageList.groupBy { it.getDisplayCityName() }
+    }
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(padding),
-        contentAlignment = Alignment.TopStart
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        if (homepageList.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = stringResource(R.string.no_world_clock_hint))
-            }
-        } else {
-            val cityGroupMap = remember(homepageList) {
-                homepageList.groupBy { it.getDisplayCityName() }
-            }
-
-            LazyColumn {
-                itemsIndexed(homepageList, key = { index, item -> "world_clock_${item.id}_$index" }) { _, item ->
-                    val cityName = item.getDisplayCityName()
-                    val countryName = item.getDisplayCountry()
-                    val adminArea = item.getDisplayAdminArea()
-
-                    val sameCityList = cityGroupMap[cityName] ?: emptyList()
-                    val isDuplicateCity = sameCityList.size > 1
-
-                    val displayHeadline = if (!isDuplicateCity) {
-                        cityName
-                    } else {
-                        val sameCountryCount = sameCityList.count {
-                            val c = it.getDisplayCountry()
-                            !c.isNullOrBlank() && c.equals(countryName, ignoreCase = true)
-                        }
-                        val isDuplicateCountry = sameCountryCount > 1
-
-                        if (isDuplicateCountry && !adminArea.isNullOrBlank() && !countryName.isNullOrBlank()) {
-                            "$cityName ($adminArea, $countryName)"
-                        } else if (!countryName.isNullOrBlank()) {
-                            "$cityName ($countryName)"
-                        } else {
-                            cityName
+        // --- 1. 顶部本地信息卡片 ---
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    // 顶行：当前时区 · 城市名 + 时区 Offset Badge
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.NearMe,
+                            contentDescription = "当前时区",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "当前时区 · $localCityName",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest
+                        ) {
+                            Text(
+                                text = localOffsetStr,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
                         }
                     }
 
-                    val currentTime = remember(tick) {
-                        LocalTime.now(item.cityTimeZoneId)
-                            .format(DateTimeFormatter.ofPattern("HH:mm"))
-                    }
-                    ListItem(
-                        headlineContent = { Text(text = displayHeadline, fontWeight = FontWeight.Bold) },
-                        supportingContent = {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 大号本地时间 + 缩写 + 右侧 Mini 表盘
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = LocalDate.now(item.cityTimeZoneId)
-                                    .format(DateTimeFormatter.ISO_DATE)
+                                text = localTimeStr,
+                                fontSize = 52.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                        },
-                        trailingContent = {
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = currentTime,
-                                style = MaterialTheme.typography.displayMedium
+                                text = localZoneId.id.takeLast(3).uppercase(locale),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 8.dp)
                             )
                         }
+
+                        MiniAnalogClock(
+                            time = localZdt,
+                            modifier = Modifier.size(52.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // 本地日期
+                    Text(
+                        text = localDateStr,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    HorizontalDivider(modifier = Modifier.padding(16.dp, 4.dp, 16.dp, 8.dp))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 昼夜日出/日落倒计时与进度条
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "$sunIcon $localPeriodDesc · $sunCountdownStr",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        LinearProgressIndicator(
+                            progress = { localDaylightProgress },
+                            modifier = Modifier
+                                .width(80.dp)
+                                .height(6.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            strokeCap = StrokeCap.Round
+                        )
+                    }
                 }
             }
         }
+
+        // --- 2. 关注城市标题栏 ---
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "关注城市",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh
+                    ) {
+                        Text(
+                            text = "${homepageList.size} 座",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // --- 3. 关注城市列表卡片 (带左滑删除与同名城市小字展示) ---
+        if (homepageList.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.no_world_clock_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            items(homepageList, key = { it.id }) { item ->
+                val sameCityCount = cityGroupMap[item.getDisplayCityName()]?.size ?: 1
+                SwipeableWorldClockCard(
+                    item = item,
+                    sameCityCount = sameCityCount,
+                    tick = tick,
+                    locale = locale,
+                    nowInstant = nowInstant,
+                    localZoneId = localZoneId,
+                    onDelete = { onDeleteWorldClock(item) }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 可左滑显示右侧删除按钮的关注城市卡片组件。
+ */
+@Composable
+private fun SwipeableWorldClockCard(
+    item: WorldClock,
+    sameCityCount: Int,
+    tick: Long,
+    locale: Locale,
+    nowInstant: Instant,
+    localZoneId: ZoneId,
+    onDelete: () -> Unit
+) {
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    val animatedOffsetX by animateFloatAsState(targetValue = offsetX, label = "swipe_offset")
+    val maxSwipePx = -160f
+
+    val draggableState = rememberDraggableState { delta ->
+        val newOffset = (offsetX + delta).coerceIn(maxSwipePx, 0f)
+        offsetX = newOffset
+    }
+
+    val cityName = item.getDisplayCityName()
+    val cityZdt = remember(tick) { ZonedDateTime.ofInstant(nowInstant, item.cityTimeZoneId) }
+    val cityTimeStr = cityZdt.format(DateTimeFormatter.ofPattern("HH:mm", locale))
+
+    val offsetStr = WorldClockUtils.getTimeZoneOffsetString(item.cityTimeZoneId, nowInstant)
+    val diffStr = WorldClockUtils.getTimeDifferenceString(item.cityTimeZoneId, localZoneId, nowInstant)
+    val relativeDateStr = WorldClockUtils.getRelativeDateString(item.cityTimeZoneId, localZoneId, nowInstant, locale)
+    val (periodDesc, dayProgress) = WorldClockUtils.getTimePeriodAndProgress(item.cityTimeZoneId, nowInstant)
+
+    val periodIcon = if (cityZdt.hour in 6..18) "☀️" else "🌙"
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight(),
+        contentAlignment = Alignment.CenterEnd
+    ) {
+        // 背景侧滑显露的红色删除按键（精确使用 matchParentSize 强行与卡片高度完全一致）
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.errorContainer,
+            modifier = Modifier
+                .matchParentSize()
+                .clickable { onDelete() }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 24.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "删除城市",
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+
+        // 上层滑动卡片主体
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset { IntOffset(animatedOffsetX.roundToInt(), 0) }
+                .draggable(
+                    state = draggableState,
+                    orientation = Orientation.Horizontal,
+                    onDragStopped = {
+                        offsetX = if (offsetX < maxSwipePx / 2) maxSwipePx else 0f
+                    }
+                )
+                .clickable {
+                    if (offsetX < 0f) {
+                        offsetX = 0f
+                    }
+                }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // 顶行：城市名 (+ 同名城市小字省份/国家) + 时区 Badge | 城市时间
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f, fill = false)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = cityName,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest
+                            ) {
+                                Text(
+                                    text = offsetStr,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        // 仅当列表中存在同名城市时，优雅展示小字省份和国家
+                        if (sameCityCount > 1) {
+                            val countryName = item.getDisplayCountry()
+                            val adminArea = item.getDisplayAdminArea()
+                            val subLocationText = if (!adminArea.isNullOrBlank() && !countryName.isNullOrBlank()) {
+                                "$adminArea, $countryName"
+                            } else {
+                                countryName ?: ""
+                            }
+
+                            if (subLocationText.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = subLocationText,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = "$periodIcon $cityTimeStr",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 次行：相对日期与时间差 | 氛围描述
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "$relativeDateStr · $diffStr",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Text(
+                        text = periodDesc,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 底环：白天/夜间进度条
+                LinearProgressIndicator(
+                    progress = { dayProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    strokeCap = StrokeCap.Round
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 迷你模拟表盘 Canvas 组件。
+ */
+@Composable
+private fun MiniAnalogClock(
+    time: ZonedDateTime,
+    modifier: Modifier = Modifier
+) {
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val outlineColor = MaterialTheme.colorScheme.outlineVariant
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+
+    Canvas(modifier = modifier) {
+        val radius = size.minDimension / 2f
+        val center = Offset(size.width / 2f, size.height / 2f)
+
+        drawCircle(
+            color = outlineColor,
+            radius = radius,
+            center = center,
+            style = Stroke(width = 1.5.dp.toPx())
+        )
+
+        for (i in 0 until 12) {
+            val angleRad = Math.toRadians((i * 30).toDouble())
+            val startRadius = radius - 5.dp.toPx()
+            val endRadius = radius - 1.5.dp.toPx()
+            val startX = center.x + (startRadius * Math.sin(angleRad)).toFloat()
+            val startY = center.y - (startRadius * Math.cos(angleRad)).toFloat()
+            val endX = center.x + (endRadius * Math.sin(angleRad)).toFloat()
+            val endY = center.y - (endRadius * Math.cos(angleRad)).toFloat()
+            drawLine(
+                color = outlineColor,
+                start = Offset(startX, startY),
+                end = Offset(endX, endY),
+                strokeWidth = 1.dp.toPx()
+            )
+        }
+
+        val hour = time.hour % 12
+        val minute = time.minute
+        val second = time.second
+
+        val minuteAngle = Math.toRadians(((minute + second / 60f) * 6).toDouble())
+        val hourAngle = Math.toRadians(((hour + minute / 60f) * 30).toDouble())
+
+        val hourLength = radius * 0.5f
+        val hourX = center.x + (hourLength * Math.sin(hourAngle)).toFloat()
+        val hourY = center.y - (hourLength * Math.cos(hourAngle)).toFloat()
+        drawLine(
+            color = onSurfaceColor,
+            start = center,
+            end = Offset(hourX, hourY),
+            strokeWidth = 2.5.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        val minuteLength = radius * 0.75f
+        val minuteX = center.x + (minuteLength * Math.sin(minuteAngle)).toFloat()
+        val minuteY = center.y - (minuteLength * Math.cos(minuteAngle)).toFloat()
+        drawLine(
+            color = primaryColor,
+            start = center,
+            end = Offset(minuteX, minuteY),
+            strokeWidth = 2.dp.toPx(),
+            cap = StrokeCap.Round
+        )
+
+        drawCircle(
+            color = primaryColor,
+            radius = 2.5.dp.toPx(),
+            center = center
+        )
     }
 }

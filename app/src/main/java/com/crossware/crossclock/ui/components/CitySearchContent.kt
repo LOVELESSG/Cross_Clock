@@ -1,6 +1,8 @@
 package com.crossware.crossclock.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,17 +14,23 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,26 +41,28 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.crossware.crossclock.R
 import com.crossware.crossclock.util.CitySearchResult
 import com.crossware.crossclock.util.CitySearchService
+import com.crossware.crossclock.util.WorldClockUtils
 import kotlinx.coroutines.launch
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
- * 混合模式城市与时区搜索组件。
- * 支持搜索框输入，实时筛选本地预设城市，并支持通过在线 API 搜索全球任意城市及自动解析时区。
- *
- * @param onCitySelected 单选回调，用于选择单项城市时区（如设置闹钟）。
- * @param isMultiSelect 是否为多选模式（如世界时钟列表勾选）。
- * @param isChecked 多选模式下检测城市是否已勾选的回调。
- * @param onCityToggled 多选模式下勾选/取消勾选城市的回调。
+ * 添加世界城市/混合模式搜索组件（高保真对齐截图 2 设计）。
  */
 @Composable
 fun CitySearchContent(
     modifier: Modifier = Modifier,
+    onCloseSheet: (() -> Unit)? = null,
     onCitySelected: ((CitySearchResult) -> Unit)? = null,
     isMultiSelect: Boolean = false,
     isChecked: (@Composable (item: CitySearchResult) -> Boolean)? = null,
@@ -66,7 +76,6 @@ fun CitySearchContent(
 
     val coroutineScope = rememberCoroutineScope()
 
-    // 当输入框变动时，实时更新本地搜索结果
     LaunchedEffect(searchQuery) {
         localResults = CitySearchService.searchLocal(searchQuery)
         hasSearchedOnline = false
@@ -84,8 +93,32 @@ fun CitySearchContent(
         }
     }
 
-    Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        // 搜索输入框
+    Column(
+        modifier = modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        // Sheet 顶栏：标题 + 右侧关闭 X 按钮
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "添加世界城市",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (onCloseSheet != null) {
+                IconButton(onClick = onCloseSheet) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "关闭")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 搜索框（圆角胶囊外观，与截图 2 保持一致）
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -99,29 +132,29 @@ fun CitySearchContent(
                     }
                 }
             },
-            singleLine = true
+            singleLine = true,
+            shape = RoundedCornerShape(28.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = Color.Transparent
+            )
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+        LazyColumn(
+            modifier = Modifier.weight(1f, fill = false),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             // 本地搜索结果区块
             if (localResults.isNotEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.local_cities_section),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-                    )
-                }
-
                 itemsIndexed(
                     localResults,
                     key = { index, item -> "local_${item.cityName}_${item.zoneId.id}_$index" }
                 ) { _, item ->
-                    CityResultItem(
+                    CityResultCardItem(
                         item = item,
                         isMultiSelect = isMultiSelect,
                         isChecked = isChecked,
@@ -131,7 +164,7 @@ fun CitySearchContent(
                 }
             }
 
-            // 在线搜索触发表/结果区块
+            // 在线搜索触发/结果区块
             if (searchQuery.trim().length >= 2) {
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -160,21 +193,11 @@ fun CitySearchContent(
                 }
 
                 if (onlineResults.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(R.string.online_cities_section),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp, start = 4.dp)
-                        )
-                    }
-
                     itemsIndexed(
                         onlineResults,
                         key = { index, item -> "online_${item.displayLocationName}_${item.zoneId.id}_$index" }
                     ) { _, item ->
-                        CityResultItem(
+                        CityResultCardItem(
                             item = item,
                             isMultiSelect = isMultiSelect,
                             isChecked = isChecked,
@@ -203,8 +226,11 @@ fun CitySearchContent(
     }
 }
 
+/**
+ * 高保真搜索结果卡片组件（完美对齐截图 2）。
+ */
 @Composable
-private fun CityResultItem(
+private fun CityResultCardItem(
     item: CitySearchResult,
     isMultiSelect: Boolean,
     isChecked: (@Composable (item: CitySearchResult) -> Boolean)?,
@@ -212,38 +238,91 @@ private fun CityResultItem(
     onCityToggled: ((CitySearchResult, Boolean) -> Unit)?
 ) {
     val checked = isChecked?.invoke(item) ?: false
+    val locale = LocalConfiguration.current.locales[0]
 
-    ListItem(
-        modifier = Modifier.clickable {
-            if (!isMultiSelect) {
-                onCitySelected?.invoke(item)
-            } else {
-                onCityToggled?.invoke(item, !checked)
+    val nowZdt = ZonedDateTime.now(item.zoneId)
+    val timeStr = nowZdt.format(DateTimeFormatter.ofPattern("HH:mm", locale))
+
+    val offsetStr = WorldClockUtils.getTimeZoneOffsetString(item.zoneId)
+    val diffStr = WorldClockUtils.getTimeDifferenceString(item.zoneId)
+
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (!isMultiSelect) {
+                    onCitySelected?.invoke(item)
+                } else {
+                    onCityToggled?.invoke(item, !checked)
+                }
             }
-        },
-        headlineContent = {
-            Text(
-                text = item.displayLocationName,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-        },
-        supportingContent = {
-            Text(
-                text = item.displayTimeZoneName + " (${item.zoneId.id})",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        trailingContent = {
-            if (isMultiSelect) {
-                Checkbox(
-                    checked = checked,
-                    onCheckedChange = { newCheckedState ->
-                        onCityToggled?.invoke(item, newCheckedState)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                // 左侧状态勾选圈（已加入主列表显示绿色 ✔，未加入显示灰色空心圈 ◯）
+                Surface(
+                    shape = CircleShape,
+                    color = if (checked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (checked) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "已添加",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
+                }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                Column {
+                    // 城市全名与国家
+                    Text(
+                        text = item.displayLocationName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    // 时区 Offset + 与本地时间差
+                    Text(
+                        text = "$offsetStr · 比当前$diffStr",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // 右侧时间与动作状态字样
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = timeStr,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = if (checked) "已加入主列表" else "点击添加",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
-    )
+    }
 }
