@@ -21,9 +21,9 @@ fun WorldClockSelectPage(
         onDismissRequest = { changeStatus() }
     ) {
         CitySearchContent(
+            onCloseSheet = { changeStatus() },
             isMultiSelect = true,
             isChecked = { searchResult ->
-                // 判断当前具体的搜索项是否已被精确添加到世界时钟列表中
                 remember(state.items, searchResult) {
                     state.items.any { clock -> clock.isMatchingSearchResult(searchResult) }
                 }
@@ -37,7 +37,6 @@ fun WorldClockSelectPage(
                     )
                     addWorldClock(worldClock)
                 } else {
-                    // 查找并准确删除对应的已添加时钟
                     val existing = state.items.find { clock -> clock.isMatchingSearchResult(searchResult) }
                     if (existing != null) {
                         deleteWorldClock(existing)
