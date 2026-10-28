@@ -165,12 +165,16 @@ private fun TimerItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize()
             .clickable { isExpanded = !isExpanded },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .animateContentSize()
+        ) {
             // 折叠头部：名称、类型 Badge、格式化总时长、快速开始按钮
             Row(
                 modifier = Modifier.fillMaxWidth(),
