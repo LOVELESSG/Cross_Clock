@@ -1,6 +1,6 @@
 package com.crossware.crossclock.util
 
-import com.crossware.crossclock.data.ALL_CITIES
+import com.crossware.crossclock.data.PRESET_CITIES
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -13,12 +13,6 @@ import java.util.Locale
 
 /**
  * 城市与时区搜索结果模型。
- *
- * @param cityName 城市名称（如 "Halifax", "Tokyo"）。
- * @param country 国家或地区名称（如 "Canada"）。
- * @param adminArea 省/州/一级行政区名称（如 "Nova Scotia"）。
- * @param zoneId 对应的标准 IANA 时区 ID（如 ZoneId.of("America/Halifax")）。
- * @param isOnline 是否来自于在线 Geocoding API 搜索结果。
  */
 data class CitySearchResult(
     val cityName: String,
@@ -28,15 +22,26 @@ data class CitySearchResult(
     val isOnline: Boolean = false
 ) {
     /**
-     * 用于 UI 显示的格式化文本。
-     * 例如："Halifax, Nova Scotia, Canada (Atlantic Standard Time)"
+     * 用于 UI 显示的格式化文本（精准去重，格式为 "城市名, 省份, 国家"）。
      */
     val displayLocationName: String
         get() {
-            val locationParts = listOfNotNull(cityName, adminArea, country)
-                .filter { it.isNotBlank() }
-                .distinct()
-            return locationParts.joinToString(", ")
+            val locCity = cityName.trim()
+            val locAdmin = adminArea?.trim()
+            val locCountry = country?.trim()
+
+            val parts = mutableListOf<String>()
+            if (locCity.isNotBlank()) {
+                parts.add(locCity)
+            }
+            if (!locAdmin.isNullOrBlank() && !locAdmin.equals(locCity, ignoreCase = true)) {
+                parts.add(locAdmin)
+            }
+            if (!locCountry.isNullOrBlank() && !locCountry.equals(locCity, ignoreCase = true) && !locCountry.equals(locAdmin, ignoreCase = true)) {
+                parts.add(locCountry)
+            }
+
+            return parts.joinToString(", ")
         }
 
     val displayTimeZoneName: String
@@ -51,49 +56,54 @@ data class CitySearchResult(
 
 /**
  * 混合模式城市与时区搜索服务。
- * 提供本地预设城市列表过滤，以及通过 Open-Meteo 免费 API 在线搜索全球城市及确定时区的功能。
+ * 支持多语种（简体中文、繁体中文、日文及英文）本地预设城市快速检索。
  */
 object CitySearchService {
 
     /**
-     * 本地预设城市模糊匹配。
+     * 本地预设城市模糊匹配（支持语种感知：简体中文、繁体中文、日文及英文）。
      */
-    fun searchLocal(query: String): List<CitySearchResult> {
+    fun searchLocal(query: String, locale: Locale = Locale.getDefault()): List<CitySearchResult> {
         val trimmed = query.trim()
-        val results = if (trimmed.isEmpty()) {
-            ALL_CITIES.map {
-                CitySearchResult(
-                    cityName = it.city,
-                    zoneId = it.cityTimeZoneId,
-                    isOnline = false
-                )
-            }
+        val lowerQuery = trimmed.lowercase()
+
+        val matchingPresetList = if (trimmed.isEmpty()) {
+            PRESET_CITIES
         } else {
-            val lowerQuery = trimmed.lowercase()
-            ALL_CITIES.filter {
-                it.city.lowercase().contains(lowerQuery) ||
-                        it.cityTimeZoneId.id.lowercase().contains(lowerQuery)
-            }.map {
-                CitySearchResult(
-                    cityName = it.city,
-                    zoneId = it.cityTimeZoneId,
-                    isOnline = false
-                )
+            PRESET_CITIES.filter { city ->
+                city.getLocalizedCityName(locale).lowercase().contains(lowerQuery) ||
+                        city.englishName.lowercase().contains(lowerQuery) ||
+                        city.nameZhCN.lowercase().contains(lowerQuery) ||
+                        city.nameZhTW.lowercase().contains(lowerQuery) ||
+                        city.nameJa.lowercase().contains(lowerQuery) ||
+                        city.zoneId.id.lowercase().contains(lowerQuery)
             }
         }
-        return results.distinctBy { "${it.displayLocationName}_${it.zoneId.id}" }
+
+        return matchingPresetList.map { city ->
+            CitySearchResult(
+                cityName = city.getLocalizedCityName(locale),
+                country = city.getLocalizedCountry(locale),
+                zoneId = city.zoneId,
+                isOnline = false
+            )
+        }.distinctBy { "${it.displayLocationName}_${it.zoneId.id}" }
     }
 
     /**
-     * 在线搜索全球城市及关联的 IANA 时区（Open-Meteo 免费 API，免 Key）。
+     * 在线搜索全球城市及关联的 IANA 时区（Open-Meteo 免费 API，支持根据语种偏好请求对应语种名称）。
      */
-    suspend fun searchOnline(query: String): List<CitySearchResult> = withContext(Dispatchers.IO) {
+    suspend fun searchOnline(query: String, locale: Locale = Locale.getDefault()): List<CitySearchResult> = withContext(Dispatchers.IO) {
         val trimmed = query.trim()
         if (trimmed.length < 2) return@withContext emptyList()
 
         try {
             val encodedQuery = URLEncoder.encode(trimmed, "UTF-8")
-            val language = if (Locale.getDefault().language == "zh") "zh" else "en"
+            val language = when (locale.language) {
+                "zh" -> "zh"
+                "ja" -> "ja"
+                else -> "en"
+            }
             val urlString = "https://geocoding-api.open-meteo.com/v1/search?name=$encodedQuery&count=10&language=$language"
             val url = URL(urlString)
             val connection = url.openConnection() as HttpURLConnection
@@ -115,8 +125,6 @@ object CitySearchService {
                     val timezoneStr = item.optString("timezone", "")
                     val featureCode = item.optString("feature_code", "")
 
-                    // 仅保留市级及以上居民点/城市单位 (feature_code 以 PPL 开头，如 PPLC=首都, PPLA=省会/地级市, PPL=城市/城镇)
-                    // 排除国家 (PCLI) 和省/州 (ADM1) 等非市级实体
                     val isCityLevel = featureCode.isEmpty() || featureCode.startsWith("PPL")
 
                     if (isCityLevel && name.isNotBlank() && timezoneStr.isNotBlank()) {

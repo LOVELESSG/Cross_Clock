@@ -1,6 +1,5 @@
 package com.crossware.crossclock.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,10 +53,9 @@ import com.crossware.crossclock.util.WorldClockUtils
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
- * 添加世界城市/混合模式搜索组件（高保真对齐截图 2 设计）。
+ * 添加世界城市/混合模式搜索组件（全面支持语种感知的本地预置城市与在线 Geocoding 检索）。
  */
 @Composable
 fun CitySearchContent(
@@ -68,16 +66,18 @@ fun CitySearchContent(
     isChecked: (@Composable (item: CitySearchResult) -> Boolean)? = null,
     onCityToggled: ((CitySearchResult, Boolean) -> Unit)? = null
 ) {
+    val locale = LocalConfiguration.current.locales[0]
+
     var searchQuery by remember { mutableStateOf("") }
-    var localResults by remember { mutableStateOf(CitySearchService.searchLocal("")) }
+    var localResults by remember { mutableStateOf(CitySearchService.searchLocal("", locale)) }
     var onlineResults by remember { mutableStateOf<List<CitySearchResult>>(emptyList()) }
     var isSearchingOnline by remember { mutableStateOf(false) }
     var hasSearchedOnline by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(searchQuery) {
-        localResults = CitySearchService.searchLocal(searchQuery)
+    LaunchedEffect(searchQuery, locale) {
+        localResults = CitySearchService.searchLocal(searchQuery, locale)
         hasSearchedOnline = false
         onlineResults = emptyList()
     }
@@ -86,7 +86,7 @@ fun CitySearchContent(
         if (searchQuery.trim().length < 2 || isSearchingOnline) return
         coroutineScope.launch {
             isSearchingOnline = true
-            val results = CitySearchService.searchOnline(searchQuery)
+            val results = CitySearchService.searchOnline(searchQuery, locale)
             onlineResults = results
             isSearchingOnline = false
             hasSearchedOnline = true
@@ -118,7 +118,7 @@ fun CitySearchContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 搜索框（圆角胶囊外观，与截图 2 保持一致）
+        // 搜索框（圆角胶囊外观）
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -227,7 +227,7 @@ fun CitySearchContent(
 }
 
 /**
- * 高保真搜索结果卡片组件（完美对齐截图 2）。
+ * 高保真搜索结果卡片组件。
  */
 @Composable
 private fun CityResultCardItem(
@@ -291,7 +291,7 @@ private fun CityResultCardItem(
                 Spacer(modifier = Modifier.width(14.dp))
 
                 Column {
-                    // 城市全名与国家
+                    // 城市全名与国家（已根据 Locale 自动多语种本地化）
                     Text(
                         text = item.displayLocationName,
                         style = MaterialTheme.typography.titleMedium,
