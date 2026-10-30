@@ -41,13 +41,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.crossware.crossclock.R
 import com.crossware.crossclock.data.StopWatchViewModel
-import com.crossware.crossclock.data.stopwatch.LapItem
 import com.crossware.crossclock.service.ServiceHelper
 import com.crossware.crossclock.service.StopWatchState
 import com.crossware.crossclock.util.Constants.ACTION_SERVICE_CANCEL
@@ -67,6 +69,30 @@ fun splitTimeComponents(totalMillis: Long, locale: Locale = Locale.getDefault())
     val mainPart = String.format(locale, "%02d:%02d", minutes, seconds)
     val subPart = String.format(locale, ".%02d", centiseconds)
     return Pair(mainPart, subPart)
+}
+
+/**
+ * 专为秒表高频跳动定制的等宽表格数字文本组件（绝对消除左右水平震颤）。
+ */
+@Composable
+fun TabularTimeText(
+    text: String,
+    fontSize: TextUnit,
+    fontWeight: FontWeight,
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        fontSize = fontSize,
+        fontWeight = fontWeight,
+        color = color,
+        style = TextStyle(
+            fontFeatureSettings = "tnum",
+            fontFamily = FontFamily.Monospace
+        ),
+        modifier = modifier
+    )
 }
 
 /**
@@ -140,15 +166,15 @@ fun StopWatchContent(viewModel: StopWatchViewModel, padding: PaddingValues) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // 大号时间字号 (05:33 .45)
+                // 大号时间字号 (05:33 .45) - 采用等宽 Tabular 时间组件，彻底消除水平高频震颤
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
+                    TabularTimeText(
                         text = mainTimeStr,
                         fontSize = 48.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
+                    TabularTimeText(
                         text = subTimeStr,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
@@ -176,8 +202,14 @@ fun StopWatchContent(viewModel: StopWatchViewModel, padding: PaddingValues) {
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = stringResource(R.string.stopwatch_current_lap, currentLapFormatted),
+                            text = stringResource(R.string.stopwatch_current_lap, ""),
                             style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        TabularTimeText(
+                            text = currentLapFormatted,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -188,7 +220,7 @@ fun StopWatchContent(viewModel: StopWatchViewModel, padding: PaddingValues) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- 2. 常驻悬浮按钮区域 (重置 - 开始/暂停 - 计次分圈，仅图标，无文字) ---
+        // --- 2. 常驻悬浮按钮区域 ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -273,7 +305,7 @@ fun StopWatchContent(viewModel: StopWatchViewModel, padding: PaddingValues) {
                     .weight(1f)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // 头部栏：标题 + 计次数量 Badge + 清除按键
+                    // 头部栏
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -362,15 +394,16 @@ fun StopWatchContent(viewModel: StopWatchViewModel, padding: PaddingValues) {
                                 }
 
                                 Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(
+                                    TabularTimeText(
                                         text = lapMain,
-                                        style = MaterialTheme.typography.titleMedium,
+                                        fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    Text(
+                                    TabularTimeText(
                                         text = lapSub,
-                                        style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Normal,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(bottom = 1.dp)
                                     )

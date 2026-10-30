@@ -1,5 +1,7 @@
 package com.crossware.crossclock.util
 
+import android.content.Context
+import com.crossware.crossclock.R
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -8,7 +10,7 @@ import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 /**
- * 世界时钟时区、时间差、氛围描述及昼夜日出日落倒计时计算工具类。
+ * 世界时钟时区、时间差、氛围描述及昼夜日出日落倒计时计算工具类（全语种 Resource 本地化支持）。
  */
 object WorldClockUtils {
 
@@ -24,9 +26,10 @@ object WorldClockUtils {
     }
 
     /**
-     * 计算某时区相对于系统本地时区的时间差描述（如 "慢 9 小时", "快 2 小时", "与本地同时区"）
+     * 计算某时区相对于系统本地时区的时间差描述（支持 Resource 本地化，如 "快 9 小时", "慢 9 小时", "9 hours faster"）
      */
     fun getTimeDifferenceString(
+        context: Context,
         cityZoneId: ZoneId,
         localZoneId: ZoneId = ZoneId.systemDefault(),
         nowInstant: Instant = Instant.now()
@@ -39,9 +42,9 @@ object WorldClockUtils {
         val diffHours = (cityOffsetSec - localOffsetSec) / 3600
 
         return when {
-            diffHours == 0 -> "与本地同时区"
-            diffHours > 0 -> "快 $diffHours 小时"
-            else -> "慢 ${-diffHours} 小时"
+            diffHours == 0 -> context.getString(R.string.same_timezone_as_local)
+            diffHours > 0 -> context.getString(R.string.hours_faster, diffHours)
+            else -> context.getString(R.string.hours_slower, -diffHours)
         }
     }
 
@@ -49,6 +52,7 @@ object WorldClockUtils {
      * 计算某时区日期相对于本地是“今天”、“昨天”还是“明天”
      */
     fun getRelativeDateString(
+        context: Context,
         cityZoneId: ZoneId,
         localZoneId: ZoneId = ZoneId.systemDefault(),
         nowInstant: Instant = Instant.now(),
@@ -60,29 +64,32 @@ object WorldClockUtils {
         val cityDate = cityZdt.toLocalDate()
         val localDate = localZdt.toLocalDate()
 
-        val dateFormatted = cityZdt.format(DateTimeFormatter.ofPattern("MM月dd日", locale))
+        val dateFormatted = cityZdt.format(DateTimeFormatter.ofPattern("MM/dd", locale))
 
         val dayDiff = ChronoUnit.DAYS.between(localDate, cityDate)
         val prefix = when (dayDiff) {
-            0L -> "今天"
-            -1L -> "昨天"
-            1L -> "明天"
-            else -> if (dayDiff < 0) "前$dateFormatted" else "后$dateFormatted"
+            0L -> context.getString(R.string.today)
+            -1L -> context.getString(R.string.yesterday)
+            1L -> context.getString(R.string.tomorrow)
+            else -> dateFormatted
         }
 
         return "$prefix · $dateFormatted"
     }
 
     /**
-     * 获取时间段描述（已移除温度信息）与昼夜进度 (0.0..1.0)
+     * 获取时间段描述（支持 Resource 本地化）与昼夜进度 (0.0..1.0)
      */
-    fun getTimePeriodAndProgress(cityZoneId: ZoneId, nowInstant: Instant = Instant.now()): Pair<String, Float> {
+    fun getTimePeriodAndProgress(
+        context: Context,
+        cityZoneId: ZoneId,
+        nowInstant: Instant = Instant.now()
+    ): Pair<String, Float> {
         val zdt = ZonedDateTime.ofInstant(nowInstant, cityZoneId)
         val hour = zdt.hour
         val minute = zdt.minute
         val currentMin = hour * 60 + minute
 
-        // 白天定义: 06:00 (360分) 至 18:00 (1080分)
         val isDay = currentMin in 360..1080
 
         val progress = if (isDay) {
@@ -93,29 +100,33 @@ object WorldClockUtils {
         }
 
         val periodDesc = when (hour) {
-            in 0..4 -> "静谧深夜"
-            in 5..8 -> "清晨日光"
-            in 9..11 -> "上午明媚"
-            in 12..14 -> "正午日光"
-            in 15..17 -> "下午温和"
-            in 18..20 -> "黄昏 · 凉爽"
-            else -> "深夜 · 晴朗"
+            in 0..4 -> context.getString(R.string.quiet_midnight)
+            in 5..8 -> context.getString(R.string.morning_daylight)
+            in 9..11 -> context.getString(R.string.morning_bright)
+            in 12..14 -> context.getString(R.string.midday_sunlight)
+            in 15..17 -> context.getString(R.string.afternoon_gentle)
+            in 18..20 -> context.getString(R.string.dusk_cool)
+            else -> context.getString(R.string.night_clear)
         }
 
         return Pair(periodDesc, progress)
     }
 
     /**
-     * 计算距离日落或日出的倒计时文本（白天算日落倒计时，夜间自动切换为日出倒计时）
+     * 计算距离日落或日出的倒计时文本（支持 Resource 本地化）
      */
-    fun getSunCountdownText(zoneId: ZoneId = ZoneId.systemDefault(), nowInstant: Instant = Instant.now()): String {
+    fun getSunCountdownText(
+        context: Context,
+        zoneId: ZoneId = ZoneId.systemDefault(),
+        nowInstant: Instant = Instant.now()
+    ): String {
         val zdt = ZonedDateTime.ofInstant(nowInstant, zoneId)
         val hour = zdt.hour
         val minute = zdt.minute
         val currentMin = hour * 60 + minute
 
-        val sunriseMin = 360  // 06:00
-        val sunsetMin = 1080  // 18:00
+        val sunriseMin = 360
+        val sunsetMin = 1080
 
         val isDay = currentMin in sunriseMin..sunsetMin
 
@@ -123,7 +134,7 @@ object WorldClockUtils {
             val diffMin = sunsetMin - currentMin
             val h = diffMin / 60
             val m = diffMin % 60
-            "距离日落 ${h}小时${m}分"
+            context.getString(R.string.sunset_countdown, h, m)
         } else {
             val diffMin = if (currentMin > sunsetMin) {
                 (24 * 60 - currentMin) + sunriseMin
@@ -132,7 +143,7 @@ object WorldClockUtils {
             }
             val h = diffMin / 60
             val m = diffMin % 60
-            "距离日出 ${h}小时${m}分"
+            context.getString(R.string.sunrise_countdown, h, m)
         }
     }
 }

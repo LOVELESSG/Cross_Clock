@@ -2,8 +2,10 @@ package com.crossware.crossclock.data.worldclock
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.crossware.crossclock.data.PRESET_CITIES
 import com.crossware.crossclock.util.CitySearchResult
 import java.time.ZoneId
+import java.util.Locale
 
 /**
  * 表示世界时钟的实体类，用于 Room 数据库存储。
@@ -25,10 +27,55 @@ data class WorldClock (
         get() = city.split(",").map { it.trim() }.filter { it.isNotBlank() }
 
     /**
-     * 获取用于显示的城市基础名称（如 "Springfield", "Tokyo", "Baotou"）。
+     * 获取用于显示的城市基础名称（如 "Springfield", "Tokyo", "Nagoya"）。
      */
     fun getDisplayCityName(): String {
         return rawParts.firstOrNull() ?: city.trim()
+    }
+
+    /**
+     * 根据 Locale 语言动态解析当前城市在活跃 App 语言环境下的本地化名称。
+     * 精准校验 zoneId 与城市名称，防止共享同一时区（如 Asia/Tokyo）的非同名城市（如 Nagoya / Osaka）被误替换为 Tokyo。
+     */
+    fun getLocalizedCityName(locale: Locale = Locale.getDefault()): String {
+        val rawName = getDisplayCityName()
+
+        val matchedPreset = PRESET_CITIES.find { preset ->
+            preset.zoneId == this.cityTimeZoneId && (
+                preset.englishName.equals(rawName, ignoreCase = true) ||
+                preset.nameZhCN.equals(rawName, ignoreCase = true) ||
+                preset.nameZhTW.equals(rawName, ignoreCase = true) ||
+                preset.nameJa.equals(rawName, ignoreCase = true) ||
+                rawName.contains(preset.englishName, ignoreCase = true) ||
+                rawName.contains(preset.nameZhCN, ignoreCase = true) ||
+                rawName.contains(preset.nameZhTW, ignoreCase = true) ||
+                rawName.contains(preset.nameJa, ignoreCase = true)
+            )
+        }
+
+        return matchedPreset?.getLocalizedCityName(locale) ?: rawName
+    }
+
+    /**
+     * 根据 Locale 语言动态解析当前国家在活跃 App 语言环境下的本地化名称。
+     */
+    fun getLocalizedCountryName(locale: Locale = Locale.getDefault()): String? {
+        val rawName = getDisplayCityName()
+
+        val matchedPreset = PRESET_CITIES.find { preset ->
+            preset.zoneId == this.cityTimeZoneId && (
+                preset.englishName.equals(rawName, ignoreCase = true) ||
+                preset.nameZhCN.equals(rawName, ignoreCase = true) ||
+                preset.nameZhTW.equals(rawName, ignoreCase = true) ||
+                preset.nameJa.equals(rawName, ignoreCase = true) ||
+                rawName.contains(preset.englishName, ignoreCase = true) ||
+                rawName.contains(preset.nameZhCN, ignoreCase = true) ||
+                rawName.contains(preset.nameZhTW, ignoreCase = true) ||
+                rawName.contains(preset.nameJa, ignoreCase = true)
+            )
+        }
+
+        return matchedPreset?.getLocalizedCountry(locale) ?: getDisplayCountry()
     }
 
     /**
@@ -57,7 +104,6 @@ data class WorldClock (
 
     /**
      * 判断当前已保存的时钟条目是否与指定的搜索结果匹配。
-     * 精准校验时区、基础城市名、省/州行政区及国家名称，避免不同行政区的同名城市发生误勾选或覆盖删除。
      */
     fun isMatchingSearchResult(searchResult: CitySearchResult): Boolean {
         // 1. 时区必须一致
