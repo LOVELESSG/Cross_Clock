@@ -64,6 +64,9 @@
     <string name="delete_confirm_title">タイマーを削除</string>
     <string name="delete_confirm_text">タイマー「%s」を削除してもよろしいですか？</string>
     <string name="confirm_delete">削除</string>
+    <string name="timer">タイマー</string>
+    <string name="step_x">ステップ %d</string>
+
     <string name="alarm_time">時間</string>
     <string name="alarm_date">日付</string>
     <string name="add_alarm">追加</string>
@@ -85,4 +88,69 @@
     <string name="local_cities_section">プリセット都市</string>
     <string name="online_cities_section">オンライン検索結果</string>
     <string name="no_cities_found">一致する都市が見つかりません。</string>
+
+    <!-- World Clock Screen & Sheets -->
+    <string name="current_timezone">現在のタイムゾーン</string>
+    <string name="followed_cities">フォロー中の都市</string>
+    <string name="city_count_format">%d 都市</string>
+    <string name="add_world_city">世界都市を追加</string>
+    <string name="added_to_main_list">メインリストに追加済み</string>
+    <string name="click_to_add">タップして追加</string>
+    <string name="added">追加済み</string>
+    <string name="same_timezone_as_local">現地と同じタイムゾーン</string>
+    <string name="hours_faster">%d 時間進んでいます</string>
+    <string name="hours_slower">%d 時間遅れています</string>
+    <string name="today">今日</string>
+    <string name="yesterday">昨日</string>
+    <string name="tomorrow">明日</string>
+    <string name="sunset_countdown">日の入りまで %1$d時間%2$d分</string>
+    <string name="sunrise_countdown">日の出まで %1$d時間%2$d分</string>
+    <string name="sun_already_set">日没済み · ナイトモード</string>
+    <string name="quiet_midnight">静寂の深夜</string>
+    <string name="morning_daylight">早朝の光</string>
+    <string name="morning_bright">爽やかな朝</string>
+    <string name="midday_sunlight">昼の陽射し</string>
+    <string name="afternoon_gentle">穏やかな午後</string>
+    <string name="dusk_cool">夕暮れ · 涼しい</string>
+    <string name="night_clear">深夜 · 晴れ</string>
+
+    <!-- Alarm Screen & Sheet -->
+    <string name="set_cross_timezone_alarm">タイムゾーン跨ぎアラーム設定</string>
+    <string name="cross_timezone_alarm">タイムゾーンアラーム</string>
+    <string name="target_wakeup_timezone">ターゲットタイムゾーン</string>
+    <string name="alarm_title_and_label">アラームタイトルとラベル</string>
+    <string name="enter_alarm_title_placeholder">タイトルを入力してください</string>
+    <string name="repeat_schedule">繰り返し周期</string>
+    <string name="ringtone_and_vibration">着信音とバイブ</string>
+    <string name="set_wakeup_time">時間設定</string>
+    <string name="label_content">ラベル内容</string>
+    <string name="set_repeat_schedule_dialog">繰り返し設定 (ターゲットゾーン基準)</string>
+    <string name="single_fixed_date">1回のみ固定日付</string>
+    <string name="repeat_weekly">曜日指定繰り返し</string>
+    <string name="ring_date">アラーム日付</string>
+    <string name="workdays">平日</string>
+    <string name="weekends">土日</string>
+    <string name="everyday">毎日</string>
+    <string name="single_run">1回のみ</string>
+    <string name="expired">期限切れ</string>
+    <string name="expired_completed">期限切れ完了 · 再設定</string>
+    <string name="paused_status">一時停止中</string>
+    <string name="rings_in_hours_format">%d時間後に鳴ります</string>
+    <string name="rings_in_days_format">%d日後に鳴ります</string>
+    <string name="rings_in_minutes_format">%d分後に鳴ります</string>
+    <string name="rings_soon">まもなく鳴ります</string>
+    <string name="local_time_equivalent">現地時間 %s</string>
+    <string name="default_ringtone">デフォルト着信音</string>
+
+    <!-- Fullscreen Lockscreen Alarm Trigger Activity -->
+    <string name="screen_locked_ringing">画面ロック中 · アラーム鳴動</string>
+    <string name="local_time">現地時間</string>
+    <string name="snooze">スヌーズ</string>
+    <string name="snooze_10_min">10分間スヌーズ</string>
+    <string name="slide_to_dismiss_alarm">右にスライドして停止</string>
+    <string name="dismiss_alarm">アラーム停止</string>
+
+    <!-- Common -->
+    <string name="done">完了</string>
+    <string name="close">閉じる</string>
 </resources>

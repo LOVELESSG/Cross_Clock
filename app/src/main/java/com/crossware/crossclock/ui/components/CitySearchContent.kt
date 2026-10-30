@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -104,21 +105,21 @@ fun CitySearchContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "添加世界城市",
+                text = stringResource(R.string.add_world_city),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
 
             if (onCloseSheet != null) {
                 IconButton(onClick = onCloseSheet) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "关闭")
+                    Icon(imageVector = Icons.Default.Close, contentDescription = stringResource(R.string.close))
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 搜索框（圆角胶囊外观）
+        // 搜索框
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -244,7 +245,7 @@ private fun CityResultCardItem(
     val timeStr = nowZdt.format(DateTimeFormatter.ofPattern("HH:mm", locale))
 
     val offsetStr = WorldClockUtils.getTimeZoneOffsetString(item.zoneId)
-    val diffStr = WorldClockUtils.getTimeDifferenceString(item.zoneId)
+    val diffStr = WorldClockUtils.getTimeDifferenceString(LocalContext.current, item.zoneId)
 
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -270,7 +271,7 @@ private fun CityResultCardItem(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                // 左侧状态勾选圈（已加入主列表显示绿色 ✔，未加入显示灰色空心圈 ◯）
+                // 左侧状态勾选圈
                 Surface(
                     shape = CircleShape,
                     color = if (checked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -280,7 +281,7 @@ private fun CityResultCardItem(
                         if (checked) {
                             Icon(
                                 imageVector = Icons.Default.Check,
-                                contentDescription = "已添加",
+                                contentDescription = stringResource(R.string.added),
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -291,7 +292,6 @@ private fun CityResultCardItem(
                 Spacer(modifier = Modifier.width(14.dp))
 
                 Column {
-                    // 城市全名与国家（已根据 Locale 自动多语种本地化）
                     Text(
                         text = item.displayLocationName,
                         style = MaterialTheme.typography.titleMedium,
@@ -299,16 +299,14 @@ private fun CityResultCardItem(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(2.dp))
-                    // 时区 Offset + 与本地时间差
                     Text(
-                        text = "$offsetStr · 比当前$diffStr",
+                        text = "$offsetStr · $diffStr",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // 右侧时间与动作状态字样
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = timeStr,
@@ -318,7 +316,7 @@ private fun CityResultCardItem(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = if (checked) "已加入主列表" else "点击添加",
+                    text = if (checked) stringResource(R.string.added_to_main_list) else stringResource(R.string.click_to_add),
                     style = MaterialTheme.typography.labelSmall,
                     color = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )

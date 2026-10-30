@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -64,7 +66,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.crossware.crossclock.R
-import com.crossware.crossclock.data.ALL_CITIES
+import com.crossware.crossclock.data.PRESET_CITIES
 import com.crossware.crossclock.data.AlarmState
 import com.crossware.crossclock.data.AlarmViewModel
 import com.crossware.crossclock.data.alarm.Alarm
@@ -124,7 +126,7 @@ fun AlarmScreen(
             val defaultTime = now.plusHours(1).withMinute(0).withSecond(0).withNano(0)
             editingAlarm = Alarm(
                 time = defaultTime,
-                message = "", // 未输入时留空，呈现占位词“请输入闹钟标题”，保存时若仍为空则自动置为“跨时区闹钟”
+                message = "",
                 timeZone = ZoneId.systemDefault(),
                 onOrOff = true
             )
@@ -193,7 +195,7 @@ fun AlarmScreen(
 }
 
 /**
- * 渲染跨时区闹钟列表，支持左滑露红底删除按键。
+ * 渲染跨时区闹钟列表。
  */
 @Composable
 fun AlarmContent(
@@ -239,7 +241,7 @@ fun AlarmContent(
 }
 
 /**
- * 可左滑显示右侧纯图标删除按钮的跨时区闹钟卡片组件。
+ * 可左滑显示右侧纯图标删除按钮的跨时区闹钟卡片组件（全语种本地化支持）。
  */
 @Composable
 private fun SwipeableAlarmCard(
@@ -248,10 +250,13 @@ private fun SwipeableAlarmCard(
     onEdit: () -> Unit,
     onToggle: () -> Unit
 ) {
+    val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
+
     var offsetX by remember { mutableFloatStateOf(0f) }
     val animatedOffsetX by animateFloatAsState(targetValue = offsetX, label = "swipe_offset")
 
-    val maxSwipePx = -160f // 左滑的最大偏移量
+    val maxSwipePx = -160f
 
     val draggableState = rememberDraggableState { delta ->
         val newOffset = (offsetX + delta).coerceIn(maxSwipePx, 0f)
@@ -264,7 +269,7 @@ private fun SwipeableAlarmCard(
             .height(130.dp),
         contentAlignment = Alignment.CenterEnd
     ) {
-        // 背景侧滑显露的红色删除按键（使用 matchParentSize 与卡片高度完全对齐）
+        // 背景侧滑显露的红色删除按键
         Surface(
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.errorContainer,
@@ -280,7 +285,7 @@ private fun SwipeableAlarmCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "删除闹钟",
+                    contentDescription = stringResource(R.string.delete_timer),
                     tint = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.size(28.dp)
                 )
@@ -299,15 +304,14 @@ private fun SwipeableAlarmCard(
                     state = draggableState,
                     orientation = Orientation.Horizontal,
                     onDragStopped = {
-                        // 松手自动吸附开/关
                         offsetX = if (offsetX < maxSwipePx / 2) maxSwipePx else 0f
                     }
                 )
                 .clickable {
                     if (offsetX < 0f) {
-                        offsetX = 0f // 若处于侧滑展开状态，点击收回
+                        offsetX = 0f
                     } else {
-                        onEdit() // 点击卡片主体进入编辑 Sheet
+                        onEdit()
                     }
                 }
         ) {
@@ -323,7 +327,6 @@ private fun SwipeableAlarmCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val locale = LocalConfiguration.current.locales[0]
                     val isPm = alarm.time.hour >= 12
                     val timeStr = String.format(locale, "%02d:%02d", alarm.time.hour, alarm.time.minute)
 
@@ -360,7 +363,7 @@ private fun SwipeableAlarmCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = alarm.message.ifBlank { "跨时区闹钟" },
+                        text = alarm.message.ifBlank { stringResource(R.string.cross_timezone_alarm) },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -376,7 +379,7 @@ private fun SwipeableAlarmCard(
                         color = if (alarm.isExpired()) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         Text(
-                            text = if (alarm.isExpired()) "已过期 (Expired)" else alarm.getRepeatDisplayText(),
+                            text = if (alarm.isExpired()) stringResource(R.string.expired) else alarm.getRepeatDisplayText(context),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = if (alarm.isExpired()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSecondaryContainer,
@@ -391,11 +394,11 @@ private fun SwipeableAlarmCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val cityInfo = ALL_CITIES.find { it.cityTimeZoneId == alarm.timeZone }
-                    val zoneName = cityInfo?.city ?: alarm.timeZone.id
+                    val zoneName = alarm.getDisplayZoneCityName(locale)
                     val nowZdt = ZonedDateTime.now(alarm.timeZone)
                     val offsetStr = nowZdt.format(DateTimeFormatter.ofPattern("O"))
                     val localEqTime = alarm.getLocalEquivalentTimeString()
+                    val localEqText = stringResource(R.string.local_time_equivalent, localEqTime)
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -409,7 +412,7 @@ private fun SwipeableAlarmCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "$zoneName $offsetStr · 对应本地 $localEqTime",
+                            text = "$zoneName $offsetStr · $localEqText",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -418,7 +421,7 @@ private fun SwipeableAlarmCard(
                     }
 
                     Text(
-                        text = alarm.getTimeRemainingText(),
+                        text = alarm.getTimeRemainingText(context),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = if (alarm.isExpired()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
@@ -427,13 +430,4 @@ private fun SwipeableAlarmCard(
             }
         }
     }
-}
-
-private fun Context.findActivity(): Activity? {
-    var context = this
-    while (context is ContextWrapper) {
-        if (context is Activity) return context
-        context = context.baseContext
-    }
-    return null
 }

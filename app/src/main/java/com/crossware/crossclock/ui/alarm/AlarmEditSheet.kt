@@ -62,10 +62,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.crossware.crossclock.data.ALL_CITIES
+import com.crossware.crossclock.R
 import com.crossware.crossclock.data.alarm.Alarm
 import com.crossware.crossclock.ui.components.CitySearchContent
 import java.time.Instant
@@ -75,10 +78,9 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
- * 跨时区世界闹钟创建/编辑底部抽屉界面。
+ * 跨时区世界闹钟创建/编辑底部抽屉界面（全语种本地化与响应式顶栏抗挤压自适应）。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,14 +90,18 @@ fun AlarmEditSheet(
     onSave: (Alarm) -> Unit
 ) {
     val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val defaultRingtoneText = stringResource(R.string.default_ringtone)
 
     // 草稿状态
     var selectedTime by remember { mutableStateOf(alarm.time.toLocalTime()) }
     var message by remember { mutableStateOf(alarm.message) }
     var selectedTimeZone by remember { mutableStateOf(alarm.timeZone) }
+    var selectedLocationName by remember { mutableStateOf(alarm.locationName) }
     var selectedRingtoneUri by remember { mutableStateOf(alarm.ringtoneUri) }
-    var selectedRingtoneTitle by remember { mutableStateOf(alarm.ringtoneTitle ?: "系统默认闹铃") }
+    var selectedRingtoneTitle by remember { mutableStateOf(alarm.ringtoneTitle ?: defaultRingtoneText) }
     var repeatDaysStr by remember { mutableStateOf(alarm.repeatDays) }
     var targetDateStr by remember { mutableStateOf(alarm.targetDate) }
 
@@ -119,10 +125,10 @@ fun AlarmEditSheet(
             if (uri != null) {
                 selectedRingtoneUri = uri.toString()
                 val ringtone = RingtoneManager.getRingtone(context, uri)
-                selectedRingtoneTitle = ringtone?.getTitle(context) ?: "自定义铃声"
+                selectedRingtoneTitle = ringtone?.getTitle(context) ?: "Ringtone"
             } else {
                 selectedRingtoneUri = null
-                selectedRingtoneTitle = "静音"
+                selectedRingtoneTitle = defaultRingtoneText
             }
         }
     }
@@ -140,22 +146,32 @@ fun AlarmEditSheet(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 顶栏：取消 | 设定跨时区闹钟 | 完成
+            // 顶栏：取消 | 设定跨时区闹钟 | 完成 (利用 weight(1f) 与 maxLines 彻底解决长英文标题挤压变形问题)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TextButton(onClick = onDismiss) {
-                    Text("取消", style = MaterialTheme.typography.titleMedium)
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    Text(stringResource(R.string.cancel_select_time), style = MaterialTheme.typography.titleMedium)
                 }
 
                 Text(
-                    text = "设定跨时区闹钟",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    text = stringResource(R.string.set_cross_timezone_alarm),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 8.dp)
                 )
 
+                val defaultTitle = stringResource(R.string.cross_timezone_alarm)
                 Button(
                     onClick = {
                         val date = if (!targetDateStr.isNullOrBlank()) {
@@ -166,8 +182,9 @@ fun AlarmEditSheet(
                         val finalDateTime = LocalDateTime.of(date, selectedTime)
                         val updatedAlarm = alarm.copy(
                             time = finalDateTime,
-                            message = message.ifBlank { "跨时区闹钟" },
+                            message = message.ifBlank { defaultTitle },
                             timeZone = selectedTimeZone,
+                            locationName = selectedLocationName,
                             ringtoneUri = selectedRingtoneUri,
                             ringtoneTitle = selectedRingtoneTitle,
                             repeatDays = repeatDaysStr,
@@ -182,7 +199,7 @@ fun AlarmEditSheet(
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 ) {
-                    Text("完成", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.done), fontWeight = FontWeight.Bold, maxLines = 1)
                 }
             }
 
@@ -200,7 +217,6 @@ fun AlarmEditSheet(
                         .padding(vertical = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val locale = LocalConfiguration.current.locales[0]
                     val isPm = selectedTime.hour >= 12
 
                     Row(
@@ -235,44 +251,43 @@ fun AlarmEditSheet(
             // 4 个参数设置卡片列表
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 // 1. 目标唤醒时区
-                val cityInfo = ALL_CITIES.find { it.cityTimeZoneId == selectedTimeZone }
-                val zoneName = cityInfo?.city ?: selectedTimeZone.id
+                val tempAlarm = alarm.copy(timeZone = selectedTimeZone, locationName = selectedLocationName)
+                val zoneName = tempAlarm.getDisplayZoneCityName(locale)
                 val nowZdt = ZonedDateTime.now(selectedTimeZone)
                 val offsetStr = nowZdt.format(DateTimeFormatter.ofPattern("O"))
 
                 OptionCard(
                     icon = Icons.Default.Public,
-                    title = "目标唤醒时区",
+                    title = stringResource(R.string.target_wakeup_timezone),
                     subtitle = "$zoneName ($offsetStr)",
                     onClick = { showCitySearchSheet = true }
                 )
 
-                // 2. 闹钟标题与标签（未输入时显示占位提示语“请输入闹钟标题”）
+                // 2. 闹钟标题与标签
                 OptionCard(
                     icon = Icons.Default.Edit,
-                    title = "闹钟标题与标签",
-                    subtitle = message.ifBlank { "请输入闹钟标题" },
+                    title = stringResource(R.string.alarm_title_and_label),
+                    subtitle = message.ifBlank { stringResource(R.string.enter_alarm_title_placeholder) },
                     onClick = { showTitleDialog = true }
                 )
 
                 // 3. 重复周期
-                val tempAlarm = alarm.copy(repeatDays = repeatDaysStr, targetDate = targetDateStr)
+                val repeatAlarm = alarm.copy(repeatDays = repeatDaysStr, targetDate = targetDateStr)
                 OptionCard(
                     icon = Icons.Default.Repeat,
-                    title = "重复周期",
-                    subtitle = tempAlarm.getRepeatDisplayText(),
+                    title = stringResource(R.string.repeat_schedule),
+                    subtitle = repeatAlarm.getRepeatDisplayText(context),
                     onClick = { showRepeatConfigDialog = true }
                 )
 
                 // 4. 铃声与触感
                 OptionCard(
                     icon = Icons.Default.GraphicEq,
-                    title = "铃声与触感",
+                    title = stringResource(R.string.ringtone_and_vibration),
                     subtitle = selectedRingtoneTitle,
                     onClick = {
                         val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
                             putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
-                            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "选择闹钟铃声")
                             putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, selectedRingtoneUri?.let { Uri.parse(it) })
                             putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
                             putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true)
@@ -295,7 +310,7 @@ fun AlarmEditSheet(
         )
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
-            title = { Text("设置唤醒时间") },
+            title = { Text(stringResource(R.string.set_wakeup_time)) },
             text = {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     TimePicker(state = timePickerState)
@@ -305,10 +320,10 @@ fun AlarmEditSheet(
                 TextButton(onClick = {
                     selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
                     showTimePicker = false
-                }) { Text("确认") }
+                }) { Text(stringResource(R.string.confirm_select_time)) }
             },
             dismissButton = {
-                TextButton(onClick = { showTimePicker = false }) { Text("取消") }
+                TextButton(onClick = { showTimePicker = false }) { Text(stringResource(R.string.cancel_select_time)) }
             }
         )
     }
@@ -322,6 +337,7 @@ fun AlarmEditSheet(
                 isMultiSelect = false,
                 onCitySelected = { searchResult ->
                     selectedTimeZone = searchResult.zoneId
+                    selectedLocationName = searchResult.cityName
                     showCitySearchSheet = false
                 }
             )
@@ -333,13 +349,13 @@ fun AlarmEditSheet(
         var tempTitle by remember { mutableStateOf(message) }
         AlertDialog(
             onDismissRequest = { showTitleDialog = false },
-            title = { Text("闹钟标题与标签") },
+            title = { Text(stringResource(R.string.alarm_title_and_label)) },
             text = {
                 OutlinedTextField(
                     value = tempTitle,
                     onValueChange = { tempTitle = it },
-                    label = { Text("标签内容") },
-                    placeholder = { Text("请输入闹钟标题") },
+                    label = { Text(stringResource(R.string.label_content)) },
+                    placeholder = { Text(stringResource(R.string.enter_alarm_title_placeholder)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -348,10 +364,10 @@ fun AlarmEditSheet(
                 TextButton(onClick = {
                     message = tempTitle
                     showTitleDialog = false
-                }) { Text("保存") }
+                }) { Text(stringResource(R.string.save_timer)) }
             },
             dismissButton = {
-                TextButton(onClick = { showTitleDialog = false }) { Text("取消") }
+                TextButton(onClick = { showTitleDialog = false }) { Text(stringResource(R.string.cancel_select_time)) }
             }
         )
     }
@@ -440,15 +456,15 @@ private fun RepeatConfigDialog(
     onDismiss: () -> Unit,
     onConfirm: (repeatDays: String?, targetDate: String?) -> Unit
 ) {
+    val locale = LocalConfiguration.current.locales[0]
     var isRepeatMode by remember { mutableStateOf(!currentRepeatDays.isNullOrBlank()) }
 
-    // 选中的重复天数 (1=Mon, ..., 7=Sun)
     val selectedDays = remember {
         mutableStateListOf<Int>().apply {
             if (!currentRepeatDays.isNullOrBlank()) {
                 addAll(currentRepeatDays.split(",").mapNotNull { it.trim().toIntOrNull() })
             } else {
-                addAll(listOf(1, 2, 3, 4, 5)) // 默认工作日
+                addAll(listOf(1, 2, 3, 4, 5))
             }
         }
     }
@@ -465,9 +481,8 @@ private fun RepeatConfigDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("设置重复周期 (基于目标时区)") },
+        title = { Text(stringResource(R.string.set_repeat_schedule_dialog)) },
         text = {
-            // 对话框内部内容可上下滑动，完美适配横屏与小屏
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -478,17 +493,16 @@ private fun RepeatConfigDialog(
                     FilterChip(
                         selected = !isRepeatMode,
                         onClick = { isRepeatMode = false },
-                        label = { Text("单次固定日期") }
+                        label = { Text(stringResource(R.string.single_fixed_date)) }
                     )
                     FilterChip(
                         selected = isRepeatMode,
                         onClick = { isRepeatMode = true },
-                        label = { Text("按周固定日重复") }
+                        label = { Text(stringResource(R.string.repeat_weekly)) }
                     )
                 }
 
                 if (!isRepeatMode) {
-                    // 单次固定日期模式
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -503,16 +517,15 @@ private fun RepeatConfigDialog(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("响铃日期", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.ring_date), style = MaterialTheme.typography.bodyMedium)
                             Text(
-                                text = "${selectedSingleDate.year}年${selectedSingleDate.monthValue}月${selectedSingleDate.dayOfMonth}日",
+                                text = selectedSingleDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd", locale)),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 } else {
-                    // 按周重复模式：预设与星期多选
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         FilterChip(
                             selected = selectedDays.sorted() == listOf(1, 2, 3, 4, 5),
@@ -520,7 +533,7 @@ private fun RepeatConfigDialog(
                                 selectedDays.clear()
                                 selectedDays.addAll(listOf(1, 2, 3, 4, 5))
                             },
-                            label = { Text("工作日") }
+                            label = { Text(stringResource(R.string.workdays)) }
                         )
                         FilterChip(
                             selected = selectedDays.sorted() == listOf(6, 7),
@@ -528,7 +541,7 @@ private fun RepeatConfigDialog(
                                 selectedDays.clear()
                                 selectedDays.addAll(listOf(6, 7))
                             },
-                            label = { Text("周末") }
+                            label = { Text(stringResource(R.string.weekends)) }
                         )
                         FilterChip(
                             selected = selectedDays.size == 7,
@@ -536,15 +549,18 @@ private fun RepeatConfigDialog(
                                 selectedDays.clear()
                                 selectedDays.addAll(listOf(1, 2, 3, 4, 5, 6, 7))
                             },
-                            label = { Text("每天") }
+                            label = { Text(stringResource(R.string.everyday)) }
                         )
                     }
 
-                    // 周一到周日 Checkbox Chips（添加横向滚动，确保全屏展示与无缝滑动选择）
-                    val daysMap = listOf(
-                        1 to "周一", 2 to "周二", 3 to "周三", 4 to "周四",
-                        5 to "周五", 6 to "周六", 7 to "周日"
-                    )
+                    val daysMap = if (locale.language == "zh") {
+                        listOf(1 to "周一", 2 to "周二", 3 to "周三", 4 to "周四", 5 to "周五", 6 to "周六", 7 to "周日")
+                    } else if (locale.language == "ja") {
+                        listOf(1 to "月", 2 to "火", 3 to "水", 4 to "木", 5 to "金", 6 to "土", 7 to "日")
+                    } else {
+                        listOf(1 to "Mon", 2 to "Tue", 3 to "Wed", 4 to "Thu", 5 to "Fri", 6 to "Sat", 7 to "Sun")
+                    }
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -576,10 +592,10 @@ private fun RepeatConfigDialog(
                         onConfirm(daysStr.ifBlank { null }, null)
                     }
                 }
-            ) { Text("确定") }
+            ) { Text(stringResource(R.string.confirm_select_time)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel_select_time)) }
         }
     )
 
@@ -595,10 +611,10 @@ private fun RepeatConfigDialog(
                         selectedSingleDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                     }
                     showDatePickerDialog = false
-                }) { Text("确认") }
+                }) { Text(stringResource(R.string.confirm_select_time)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePickerDialog = false }) { Text("取消") }
+                TextButton(onClick = { showDatePickerDialog = false }) { Text(stringResource(R.string.cancel_select_time)) }
             }
         ) {
             DatePicker(state = datePickerState)

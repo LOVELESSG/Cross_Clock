@@ -63,6 +63,9 @@
     <string name="delete_confirm_title">刪除計時器</string>
     <string name="delete_confirm_text">確定要刪除計時器「%s」嗎？</string>
     <string name="confirm_delete">確認刪除</string>
+    <string name="timer">計時器</string>
+    <string name="step_x">步驟 %d</string>
+
     <string name="alarm_time">時間</string>
     <string name="alarm_date">日期</string>
     <string name="add_alarm">完成</string>
@@ -84,4 +87,69 @@
     <string name="local_cities_section">本地預設城市</string>
     <string name="online_cities_section">線上搜尋結果</string>
     <string name="no_cities_found">未找到匹配的城市。</string>
+
+    <!-- World Clock Screen & Sheets -->
+    <string name="current_timezone">當前時區</string>
+    <string name="followed_cities">關注城市</string>
+    <string name="city_count_format">%d 座</string>
+    <string name="add_world_city">新增世界城市</string>
+    <string name="added_to_main_list">已加入主列表</string>
+    <string name="click_to_add">點擊新增</string>
+    <string name="added">已新增</string>
+    <string name="same_timezone_as_local">與本地同時區</string>
+    <string name="hours_faster">快 %d 小時</string>
+    <string name="hours_slower">慢 %d 小時</string>
+    <string name="today">今天</string>
+    <string name="yesterday">昨天</string>
+    <string name="tomorrow">明天</string>
+    <string name="sunset_countdown">距離日落 %1$d小時%2$d分</string>
+    <string name="sunrise_countdown">距離日出 %1$d小時%2$d分</string>
+    <string name="sun_already_set">已日落 · 夜間模式</string>
+    <string name="quiet_midnight">靜謐深夜</string>
+    <string name="morning_daylight">清晨日光</string>
+    <string name="morning_bright">上午明媚</string>
+    <string name="midday_sunlight">正午日光</string>
+    <string name="afternoon_gentle">下午溫和</string>
+    <string name="dusk_cool">黃昏 · 涼爽</string>
+    <string name="night_clear">深夜 · 晴朗</string>
+
+    <!-- Alarm Screen & Sheet -->
+    <string name="set_cross_timezone_alarm">設定跨時區鬧鐘</string>
+    <string name="cross_timezone_alarm">跨時區鬧鐘</string>
+    <string name="target_wakeup_timezone">目標喚醒時區</string>
+    <string name="alarm_title_and_label">鬧鐘標題與標籤</string>
+    <string name="enter_alarm_title_placeholder">請輸入鬧鐘標題</string>
+    <string name="repeat_schedule">重複週期</string>
+    <string name="ringtone_and_vibration">鈴聲與觸感</string>
+    <string name="set_wakeup_time">設定喚醒時間</string>
+    <string name="label_content">標籤內容</string>
+    <string name="set_repeat_schedule_dialog">設定重複週期 (基於目標時區)</string>
+    <string name="single_fixed_date">單次固定日期</string>
+    <string name="repeat_weekly">按週固定日重複</string>
+    <string name="ring_date">響鈴日期</string>
+    <string name="workdays">工作日</string>
+    <string name="weekends">週末</string>
+    <string name="everyday">每天</string>
+    <string name="single_run">單次</string>
+    <string name="expired">已過期 (Expired)</string>
+    <string name="expired_completed">已逾期完成 · 點擊重設</string>
+    <string name="paused_status">已休眠暫停</string>
+    <string name="rings_in_hours_format">%d小時後響鈴</string>
+    <string name="rings_in_days_format">%d天後響鈴</string>
+    <string name="rings_in_minutes_format">%d分鐘後響鈴</string>
+    <string name="rings_soon">即將響鈴</string>
+    <string name="local_time_equivalent">對應本地 %s</string>
+    <string name="default_ringtone">預設鈴聲</string>
+
+    <!-- Fullscreen Lockscreen Alarm Trigger Activity -->
+    <string name="screen_locked_ringing">螢幕已鎖定 · 響鈴中</string>
+    <string name="local_time">本地時間</string>
+    <string name="snooze">稍後提醒</string>
+    <string name="snooze_10_min">小睡 10 分鐘</string>
+    <string name="slide_to_dismiss_alarm">向右滑動關閉鬧鐘</string>
+    <string name="dismiss_alarm">關閉鬧鐘</string>
+
+    <!-- Common -->
+    <string name="done">完成</string>
+    <string name="close">關閉</string>
 </resources>

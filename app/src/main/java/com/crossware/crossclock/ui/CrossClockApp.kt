@@ -63,9 +63,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,6 +80,7 @@ import androidx.navigation.compose.rememberNavController
 import com.crossware.crossclock.R
 import com.crossware.crossclock.data.ALL_CITIES
 import com.crossware.crossclock.data.DRAWER_ITEMS
+import com.crossware.crossclock.data.PRESET_CITIES
 import com.crossware.crossclock.data.TimerViewModel
 import com.crossware.crossclock.data.WorldClockViewModel
 import com.crossware.crossclock.data.timer.TimerEntity
@@ -164,15 +167,27 @@ fun CrossClockApp(
                     DRAWER_ITEMS.forEach { item ->
                         NavigationBarItem(
                             icon = { Icon(painter = painterResource(id = item.icon), contentDescription = stringResource(item.name)) },
-                            label = { Text(stringResource(item.name)) },
+                            label = {
+                                Text(
+                                    text = stringResource(item.name),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
                             selected = item.route == currentRoute,
                             onClick = {
-                                navController.navigate(route = item.route) {
-                                    navController.graph.startDestinationRoute?.let { route ->
-                                        popUpTo(route) { saveState = true }
+                                val activeRoute = navController.currentDestination?.route
+                                if (item.route != activeRoute) {
+                                    navController.navigate(route = item.route) {
+                                        if (activeRoute != null) {
+                                            popUpTo(activeRoute) {
+                                                inclusive = true
+                                                saveState = true
+                                            }
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
                             }
                         )
@@ -399,22 +414,26 @@ fun WorldClockContent(
     padding: PaddingValues,
     onDeleteWorldClock: (WorldClock) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val locale = LocalConfiguration.current.locales[0]
     val nowInstant = remember(tick) { Instant.ofEpochMilli(tick) }
 
-    // 本地系统时区及城市名称解析
+    // 本地系统时区及城市名称解析（基于当前 Locale 实时获取单城名）
     val localZoneId = remember { ZoneId.systemDefault() }
-    val localCityInfo = remember(localZoneId) {
-        ALL_CITIES.find { it.cityTimeZoneId == localZoneId }
+    val presetLocalCity = remember(localZoneId) {
+        PRESET_CITIES.find { it.zoneId == localZoneId }
     }
-    val localCityName = localCityInfo?.city ?: "东京"
+    val localCityName = presetLocalCity?.getLocalizedCityName(locale)
+        ?: ALL_CITIES.find { it.cityTimeZoneId == localZoneId }?.getDisplayCityName()
+        ?: "Tokyo"
+
     val localZdt = remember(tick) { ZonedDateTime.ofInstant(nowInstant, localZoneId) }
 
     val localTimeStr = localZdt.format(DateTimeFormatter.ofPattern("HH:mm", locale))
-    val localDateStr = localZdt.format(DateTimeFormatter.ofPattern("MM月dd日 EEEE", locale))
+    val localDateStr = localZdt.format(DateTimeFormatter.ofPattern("MM/dd EEEE", locale))
     val localOffsetStr = WorldClockUtils.getTimeZoneOffsetString(localZoneId, nowInstant)
-    val (localPeriodDesc, localDaylightProgress) = WorldClockUtils.getTimePeriodAndProgress(localZoneId, nowInstant)
-    val sunCountdownStr = WorldClockUtils.getSunCountdownText(localZoneId, nowInstant)
+    val (localPeriodDesc, localDaylightProgress) = WorldClockUtils.getTimePeriodAndProgress(context, localZoneId, nowInstant)
+    val sunCountdownStr = WorldClockUtils.getSunCountdownText(context, localZoneId, nowInstant)
     val isDaytime = localZdt.hour in 6..18
     val sunIcon = if (isDaytime) "☀️" else "🌙"
 
@@ -446,13 +465,13 @@ fun WorldClockContent(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.NearMe,
-                            contentDescription = "当前时区",
+                            contentDescription = stringResource(R.string.current_timezone),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "当前时区 · $localCityName",
+                            text = "${stringResource(R.string.current_timezone)} · $localCityName",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -549,7 +568,7 @@ fun WorldClockContent(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "关注城市",
+                        text = stringResource(R.string.followed_cities),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -560,7 +579,7 @@ fun WorldClockContent(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
                         Text(
-                            text = "${homepageList.size} 座",
+                            text = stringResource(R.string.city_count_format, homepageList.size),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -617,6 +636,7 @@ private fun SwipeableWorldClockCard(
     localZoneId: ZoneId,
     onDelete: () -> Unit
 ) {
+    val context = LocalContext.current
     var offsetX by remember { mutableFloatStateOf(0f) }
     val animatedOffsetX by animateFloatAsState(targetValue = offsetX, label = "swipe_offset")
     val maxSwipePx = -160f
@@ -626,14 +646,14 @@ private fun SwipeableWorldClockCard(
         offsetX = newOffset
     }
 
-    val cityName = item.getDisplayCityName()
+    val cityName = item.getLocalizedCityName(locale)
     val cityZdt = remember(tick) { ZonedDateTime.ofInstant(nowInstant, item.cityTimeZoneId) }
     val cityTimeStr = cityZdt.format(DateTimeFormatter.ofPattern("HH:mm", locale))
 
     val offsetStr = WorldClockUtils.getTimeZoneOffsetString(item.cityTimeZoneId, nowInstant)
-    val diffStr = WorldClockUtils.getTimeDifferenceString(item.cityTimeZoneId, localZoneId, nowInstant)
-    val relativeDateStr = WorldClockUtils.getRelativeDateString(item.cityTimeZoneId, localZoneId, nowInstant, locale)
-    val (periodDesc, dayProgress) = WorldClockUtils.getTimePeriodAndProgress(item.cityTimeZoneId, nowInstant)
+    val diffStr = WorldClockUtils.getTimeDifferenceString(context, item.cityTimeZoneId, localZoneId, nowInstant)
+    val relativeDateStr = WorldClockUtils.getRelativeDateString(context, item.cityTimeZoneId, localZoneId, nowInstant, locale)
+    val (periodDesc, dayProgress) = WorldClockUtils.getTimePeriodAndProgress(context, item.cityTimeZoneId, nowInstant)
 
     val periodIcon = if (cityZdt.hour in 6..18) "☀️" else "🌙"
 
@@ -659,7 +679,7 @@ private fun SwipeableWorldClockCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "删除城市",
+                    contentDescription = stringResource(R.string.delete_timer),
                     tint = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.size(28.dp)
                 )
@@ -722,9 +742,9 @@ private fun SwipeableWorldClockCard(
                             }
                         }
 
-                        // 仅当列表中存在同名城市时，优雅展示小字省份和国家
+                        // 仅当列表中存在同名城市时，展示小字省份和国家
                         if (sameCityCount > 1) {
-                            val countryName = item.getDisplayCountry()
+                            val countryName = item.getLocalizedCountryName(locale)
                             val adminArea = item.getDisplayAdminArea()
                             val subLocationText = if (!adminArea.isNullOrBlank() && !countryName.isNullOrBlank()) {
                                 "$adminArea, $countryName"

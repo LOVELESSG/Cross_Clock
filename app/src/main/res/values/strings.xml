@@ -82,6 +82,8 @@
     <string name="delete_confirm_title">Delete Timer</string>
     <string name="delete_confirm_text">Are you sure you want to delete timer \"%s\"?</string>
     <string name="confirm_delete">Delete</string>
+    <string name="timer">Timer</string>
+    <string name="step_x">Step %d</string>
 
     <string name="search_city_hint">Search city or timezone…</string>
     <string name="search_online">Search online for \"%s\"</string>
@@ -89,4 +91,69 @@
     <string name="local_cities_section">Local Preset Cities</string>
     <string name="online_cities_section">Online Search Results</string>
     <string name="no_cities_found">No matching cities found.</string>
+
+    <!-- World Clock Screen & Sheets -->
+    <string name="current_timezone">Current Timezone</string>
+    <string name="followed_cities">Followed Cities</string>
+    <string name="city_count_format">%d Cities</string>
+    <string name="add_world_city">Add World City</string>
+    <string name="added_to_main_list">Added to Main List</string>
+    <string name="click_to_add">Click to Add</string>
+    <string name="added">Added</string>
+    <string name="same_timezone_as_local">Same timezone as local</string>
+    <string name="hours_faster">%d hours faster</string>
+    <string name="hours_slower">%d hours slower</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="sunset_countdown">Until Sunset %1$dh %2$dm</string>
+    <string name="sunrise_countdown">Until Sunrise %1$dh %2$dm</string>
+    <string name="sun_already_set">Sunset · Night Mode</string>
+    <string name="quiet_midnight">Quiet Midnight</string>
+    <string name="morning_daylight">Morning Sunlight</string>
+    <string name="morning_bright">Bright Morning</string>
+    <string name="midday_sunlight">Midday Sunlight</string>
+    <string name="afternoon_gentle">Gentle Afternoon</string>
+    <string name="dusk_cool">Dusk · Cool</string>
+    <string name="night_clear">Night · Clear</string>
+
+    <!-- Alarm Screen & Sheet -->
+    <string name="set_cross_timezone_alarm">Set Cross-TimeZone Alarm</string>
+    <string name="cross_timezone_alarm">Cross-TimeZone Alarm</string>
+    <string name="target_wakeup_timezone">Target Timezone</string>
+    <string name="alarm_title_and_label">Alarm Title &amp; Label</string>
+    <string name="enter_alarm_title_placeholder">Please enter alarm title</string>
+    <string name="repeat_schedule">Repeat Schedule</string>
+    <string name="ringtone_and_vibration">Ringtone &amp; Sound</string>
+    <string name="set_wakeup_time">Set Time</string>
+    <string name="label_content">Label Content</string>
+    <string name="set_repeat_schedule_dialog">Set Repeat Schedule (Target Zone)</string>
+    <string name="single_fixed_date">Single Fixed Date</string>
+    <string name="repeat_weekly">Repeat Weekly</string>
+    <string name="ring_date">Ring Date</string>
+    <string name="workdays">Workdays</string>
+    <string name="weekends">Weekends</string>
+    <string name="everyday">Everyday</string>
+    <string name="single_run">Single</string>
+    <string name="expired">Expired</string>
+    <string name="expired_completed">Expired · Click to Reset</string>
+    <string name="paused_status">Paused</string>
+    <string name="rings_in_hours_format">Rings in %d hours</string>
+    <string name="rings_in_days_format">Rings in %d days</string>
+    <string name="rings_in_minutes_format">Rings in %d mins</string>
+    <string name="rings_soon">Rings soon</string>
+    <string name="local_time_equivalent">Local %s</string>
+    <string name="default_ringtone">Default Ringtone</string>
+
+    <!-- Fullscreen Lockscreen Alarm Trigger Activity -->
+    <string name="screen_locked_ringing">Screen Locked · Ringing</string>
+    <string name="local_time">Local Time</string>
+    <string name="snooze">Snooze</string>
+    <string name="snooze_10_min">Nap 10 Mins</string>
+    <string name="slide_to_dismiss_alarm">Slide Right to Dismiss Alarm</string>
+    <string name="dismiss_alarm">Dismiss Alarm</string>
+
+    <!-- Common -->
+    <string name="done">Done</string>
+    <string name="close">Close</string>
 </resources>

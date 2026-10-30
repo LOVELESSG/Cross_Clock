@@ -1,13 +1,17 @@
 package com.crossware.crossclock.data.alarm
 
+import android.content.Context
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.crossware.crossclock.R
+import com.crossware.crossclock.data.PRESET_CITIES
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 /**
  * 跨时区世界闹钟实体类。
@@ -21,6 +25,7 @@ import java.time.temporal.ChronoUnit
  * @param ringtoneTitle 铃声显示标题。
  * @param repeatDays 重复日（如 "1,2,3,4,5"；为 null 表示单次固定日期）。
  * @param targetDate 单次闹钟的目标日期（如 "2027-12-13"）。
+ * @param locationName 目标唤醒城市的关联名称（如 "Nagoya", "名古屋", "San Jose"）。
  */
 @Entity
 data class Alarm(
@@ -33,8 +38,34 @@ data class Alarm(
     val ringtoneUri: String? = null,
     val ringtoneTitle: String? = null,
     val repeatDays: String? = null,
-    val targetDate: String? = null
+    val targetDate: String? = null,
+    val locationName: String? = null
 ) {
+    /**
+     * 获取用于显示的唤醒城市/时区名称（防止同属 Asia/Tokyo 的 Nagoya/Osaka 被误替换为 Tokyo）。
+     */
+    fun getDisplayZoneCityName(locale: Locale = Locale.getDefault()): String {
+        if (!locationName.isNullOrBlank()) {
+            val rawName = locationName.trim()
+            val matchedPreset = PRESET_CITIES.find { preset ->
+                preset.zoneId == timeZone && (
+                    preset.englishName.equals(rawName, ignoreCase = true) ||
+                    preset.nameZhCN.equals(rawName, ignoreCase = true) ||
+                    preset.nameZhTW.equals(rawName, ignoreCase = true) ||
+                    preset.nameJa.equals(rawName, ignoreCase = true) ||
+                    rawName.contains(preset.englishName, ignoreCase = true) ||
+                    rawName.contains(preset.nameZhCN, ignoreCase = true) ||
+                    rawName.contains(preset.nameZhTW, ignoreCase = true) ||
+                    rawName.contains(preset.nameJa, ignoreCase = true)
+                )
+            }
+            return matchedPreset?.getLocalizedCityName(locale) ?: rawName
+        }
+
+        val presetCity = PRESET_CITIES.find { it.zoneId == timeZone }
+        return presetCity?.getLocalizedCityName(locale) ?: timeZone.id
+    }
+
     /**
      * 解析重复天数列表 (1=Mon, 2=Tue, ..., 7=Sun)
      */
@@ -54,7 +85,6 @@ data class Alarm(
         val daysList = parseRepeatDaysList()
 
         if (daysList.isEmpty()) {
-            // 固定单次日期闹钟
             val date = if (!targetDate.isNullOrBlank()) {
                 try {
                     LocalDate.parse(targetDate)
@@ -71,12 +101,11 @@ data class Alarm(
             }
             return candidateZdt
         } else {
-            // 固定日重复闹钟（如每周一、三、五，基于目标时区计算）
             var candidateDate = nowInTargetZone.toLocalDate()
             var candidateZdt = ZonedDateTime.of(candidateDate, targetTime, targetZone)
 
             for (i in 0..14) {
-                val dayOfWeekVal = candidateDate.dayOfWeek.value // 1=Mon, ..., 7=Sun
+                val dayOfWeekVal = candidateDate.dayOfWeek.value
                 if (daysList.contains(dayOfWeekVal)) {
                     if (candidateZdt.isAfter(nowInTargetZone)) {
                         return candidateZdt
@@ -109,59 +138,64 @@ data class Alarm(
     }
 
     /**
-     * 获取距离响铃的剩余倒计时文本（如 "18小时后响铃"）。
+     * 获取距离响铃的剩余倒计时文本（全语种本地化）。
      */
-    fun getTimeRemainingText(): String {
-        if (!onOrOff) return "已休眠暂停"
-        if (isExpired()) return "已逾期完成"
+    fun getTimeRemainingText(context: Context): String {
+        if (!onOrOff) return context.getString(R.string.paused_status)
+        if (isExpired()) return context.getString(R.string.expired_completed)
 
         val nextZdt = getNextTriggerZonedDateTime()
         val now = ZonedDateTime.now(timeZone)
 
         val totalMinutes = ChronoUnit.MINUTES.between(now, nextZdt)
-        if (totalMinutes < 0) return "已逾期完成"
-        if (totalMinutes < 1) return "即将响铃"
+        if (totalMinutes < 0) return context.getString(R.string.expired_completed)
+        if (totalMinutes < 1) return context.getString(R.string.rings_soon)
 
         val hours = totalMinutes / 60
         val minutes = totalMinutes % 60
 
         return if (hours >= 24) {
             val days = hours / 24
-            "${days}天后响铃"
+            context.getString(R.string.rings_in_days_format, days)
         } else if (hours > 0) {
-            "${hours}小时后响铃"
+            context.getString(R.string.rings_in_hours_format, hours)
         } else {
-            "${minutes}分钟后响铃"
+            context.getString(R.string.rings_in_minutes_format, minutes)
         }
     }
 
     /**
-     * 获取重复周期的描述文本 (如 "工作日 (周一至周五)", "每周二、四", "每天", "10月18日 · 单次")。
+     * 获取重复周期的描述文本（全语种本地化）。
      */
-    fun getRepeatDisplayText(): String {
+    fun getRepeatDisplayText(context: Context): String {
         val days = parseRepeatDaysList()
+        val singleRunText = context.getString(R.string.single_run)
         if (days.isEmpty()) {
             return if (!targetDate.isNullOrBlank()) {
                 try {
                     val date = LocalDate.parse(targetDate)
-                    "${date.monthValue}月${date.dayOfMonth}日 · 单次"
+                    "${date.monthValue}/${date.dayOfMonth} · $singleRunText"
                 } catch (e: Exception) {
-                    "单次"
+                    singleRunText
                 }
             } else {
-                "单次"
+                singleRunText
             }
         }
 
-        if (days.size == 7) return "每天"
-        if (days.sorted() == listOf(1, 2, 3, 4, 5)) return "工作日 (周一至周五)"
-        if (days.sorted() == listOf(6, 7)) return "周末"
+        if (days.size == 7) return context.getString(R.string.everyday)
+        if (days.sorted() == listOf(1, 2, 3, 4, 5)) return context.getString(R.string.workdays)
+        if (days.sorted() == listOf(6, 7)) return context.getString(R.string.weekends)
 
-        val dayNames = mapOf(
-            1 to "一", 2 to "二", 3 to "三", 4 to "四",
-            5 to "五", 6 to "六", 7 to "日"
-        )
-        val selectedNames = days.sorted().mapNotNull { dayNames[it] }.joinToString("、")
-        return "每周$selectedNames"
+        val locale = Locale.getDefault()
+        val dayNames = if (locale.language == "zh") {
+            mapOf(1 to "周一", 2 to "周二", 3 to "周三", 4 to "周四", 5 to "周五", 6 to "周六", 7 to "周日")
+        } else if (locale.language == "ja") {
+            mapOf(1 to "月", 2 to "火", 3 to "水", 4 to "木", 5 to "金", 6 to "土", 7 to "日")
+        } else {
+            mapOf(1 to "Mon", 2 to "Tue", 3 to "Wed", 4 to "Thu", 5 to "Fri", 6 to "Sat", 7 to "Sun")
+        }
+        val selectedNames = days.sorted().mapNotNull { dayNames[it] }.joinToString(", ")
+        return selectedNames
     }
 }
