@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -80,13 +81,17 @@ fun TimerEditBottomSheet(
     var isInfiniteLoop by remember { mutableStateOf(timer?.loopCount == -1) }
     var customLoopInput by remember { mutableStateOf(if (timer != null && timer.loopCount > 0) timer.loopCount.toString() else "3") }
 
+    val resources = LocalResources.current
+    val defaultTimerName = stringResource(R.string.timer)
+    val firstStepDefaultName = stringResource(R.string.step_x, 1)
+
     // 步骤列表状态
     val steps = remember {
         mutableStateListOf<TimerStep>().apply {
             if (timer != null && timer.steps.isNotEmpty()) {
                 addAll(timer.steps)
             } else {
-                add(TimerStep(name = "步骤 1", durationSeconds = 300, colorHex = "#3F51B5"))
+                add(TimerStep(name = firstStepDefaultName, durationSeconds = 300, colorHex = "#3F51B5"))
             }
         }
     }
@@ -203,7 +208,13 @@ fun TimerEditBottomSheet(
                         TextButton(onClick = {
                             val newIndex = steps.size + 1
                             val newColor = PRESET_COLORS[(steps.size) % PRESET_COLORS.size]
-                            steps.add(TimerStep(name = "步骤 $newIndex", durationSeconds = 60, colorHex = newColor))
+                            steps.add(
+                                TimerStep(
+                                    name = resources.getString(R.string.step_x, newIndex),
+                                    durationSeconds = 60,
+                                    colorHex = newColor
+                                )
+                            )
                         }) {
                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(4.dp))
@@ -231,12 +242,20 @@ fun TimerEditBottomSheet(
                         if (isInfiniteLoop) -1 else (customLoopInput.toIntOrNull()?.coerceAtLeast(1) ?: 1)
                     } else 1
 
+                    val finalSteps = steps.mapIndexed { index, step ->
+                        if (step.name.isBlank()) {
+                            step.copy(name = resources.getString(R.string.step_x, index + 1))
+                        } else {
+                            step
+                        }
+                    }
+
                     val finalTimer = TimerEntity(
                         id = timer?.id ?: 0,
-                        name = name.ifBlank { "计时器" },
+                        name = name.ifBlank { defaultTimerName },
                         type = selectedType,
                         loopCount = finalLoopCount,
-                        steps = steps.toList()
+                        steps = finalSteps
                     )
                     onSave(finalTimer)
                 },
@@ -259,6 +278,8 @@ private fun StepEditCard(
     onStepChange: (TimerStep) -> Unit,
     onDelete: () -> Unit
 ) {
+    val defaultStepName = stringResource(R.string.step_x, stepIndex + 1)
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(12.dp),
@@ -271,7 +292,7 @@ private fun StepEditCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "步骤 ${stepIndex + 1}",
+                    text = defaultStepName,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -290,6 +311,7 @@ private fun StepEditCard(
                 value = step.name,
                 onValueChange = { onStepChange(step.copy(name = it)) },
                 label = { Text(stringResource(R.string.step_name)) },
+                placeholder = { Text(defaultStepName) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )

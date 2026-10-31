@@ -19,8 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.crossware.crossclock.R
 import com.crossware.crossclock.data.timer.TimerStep
 
 /**
@@ -124,8 +126,9 @@ fun TimerTimeline(
 
                 // 步骤名称与时长
                 Column(modifier = Modifier.weight(1f)) {
+                    val fallbackStepName = stringResource(R.string.step_x, index + 1)
                     Text(
-                        text = "${index + 1}. ${step.name.ifBlank { "步骤 ${index + 1}" }}",
+                        text = "${index + 1}. ${step.name.ifBlank { fallbackStepName }}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )
