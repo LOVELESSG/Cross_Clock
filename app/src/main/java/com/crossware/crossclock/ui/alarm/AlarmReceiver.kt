@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.crossware.crossclock.FullScreenAlarmNotification
 import com.crossware.crossclock.R
@@ -32,30 +33,43 @@ class AlarmReceiver : BroadcastReceiver() {
         val message = intent.getStringExtra("message") ?: "闹钟"
         val time = intent.getStringExtra("time") ?: ""
 
-        // 1. 立即启动响铃播放服务（无论亮屏还是锁屏均立刻响起）
-        AlarmRingtoneService.startRingtone(context, ringtoneUriStr)
-
-        // 2. 若为单次固定日期闹钟，触发后立刻更新数据库将该闹钟标注为已关闭/过期
-        if (alarmId != -1) {
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // 1. 若具有有效 alarmId，从数据库中校验该闹钟是否依然存在且处于开启状态
+                if (alarmId != -1) {
                     val db = AppDatabase.getDatabase(context)
                     val alarmList = db.alarmDao().loadAllAlarmInList()
                     val targetAlarm = alarmList.find { it.id == alarmId }
-                    if (targetAlarm != null && targetAlarm.repeatDays.isNullOrBlank()) {
+                    // 核心防御：若闹钟已被用户删除，或已被手动关闭，坚决不响铃、不展示通知
+                    if (targetAlarm == null || !targetAlarm.onOrOff) {
+                        Log.d("AlarmReceiver", "Alarm $alarmId is deleted or disabled. Suppressing ring.")
+                        return@launch
+                    }
+                    if (targetAlarm.repeatDays.isNullOrBlank()) {
                         db.alarmDao().updateAlarmStatus(alarmId, false)
                     }
-                } catch (e: Exception) {
-                    // ignore
-                } finally {
-                    pendingResult.finish()
                 }
-            }
-        } else {
-            pendingResult.finish()
-        }
 
-        // 3. 构建全屏响铃界面 Intent 与通知
+                // 2. 校验通过，启动响铃播放服务（无论亮屏还是锁屏均立刻响起）
+                AlarmRingtoneService.startRingtone(context, ringtoneUriStr)
+
+                // 3. 构建全屏响铃界面 Intent 与通知
+                showNotification(context, alarmId, message, time, ringtoneTitle)
+            } catch (e: Exception) {
+                Log.e("AlarmReceiver", "Error processing alarm", e)
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    private fun showNotification(
+        context: Context,
+        alarmId: Int,
+        message: String,
+        time: String,
+        ringtoneTitle: String?
+    ) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
