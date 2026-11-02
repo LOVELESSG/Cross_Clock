@@ -16,8 +16,6 @@ class CrossAlarmScheduler(
 ): AlarmScheduler {
     // 获取系统的闹钟服务
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    // 创建指向 AlarmReceiver 的 Intent，当闹钟触发时由系统发出广播
-    private val intent = Intent(context, AlarmReceiver::class.java)
 
     /**
      * 安排一个精确的闹钟。
@@ -27,37 +25,42 @@ class CrossAlarmScheduler(
         if (!item.onOrOff || item.isExpired()) return
 
         val triggerMillis = item.getNextTriggerZonedDateTime().toInstant().toEpochMilli()
+        val alarmIntent = Intent(context, AlarmReceiver::class.java).apply {
+            putExtra("message", item.message)
+            putExtra("time", item.time.toLocalTime().toString())
+            putExtra("id", item.id)
+            putExtra("ringtoneUri", item.ringtoneUri)
+            putExtra("ringtoneTitle", item.ringtoneTitle)
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            item.id,
+            alarmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             triggerMillis,
-            PendingIntent.getBroadcast(
-                context,
-                item.id,
-                intent.apply {
-                    putExtra("message", item.message)
-                    putExtra("time", item.time.toLocalTime().toString())
-                    putExtra("id", item.id)
-                    putExtra("ringtoneUri", item.ringtoneUri)
-                    putExtra("ringtoneTitle", item.ringtoneTitle)
-                },
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
+            pendingIntent
         )
+        Log.d("CrossAlarmScheduler", "Scheduled alarm id: ${item.id} at $triggerMillis")
     }
 
     /**
      * 取消一个已安排的闹钟。
      */
     override fun cancel(item: Alarm) {
-        alarmManager.cancel(
-            PendingIntent.getBroadcast(
-                context,
-                item.id,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
+        val alarmIntent = Intent(context, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            item.id,
+            alarmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        Log.d("cancel hashcode: ", item.id.toString())
+        alarmManager.cancel(pendingIntent)
+        pendingIntent.cancel()
+        Log.d("CrossAlarmScheduler", "Canceled alarm id: ${item.id}")
     }
 }

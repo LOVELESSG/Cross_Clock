@@ -107,9 +107,24 @@ fun AlarmScreen(
         }
     }
 
+    // 记录上一次同步的闹钟列表，用于在闹钟被删除时及时从系统取消调度
+    var previousAlarms by remember { mutableStateOf<List<Alarm>>(emptyList()) }
+
     // 同步闹钟定时任务调度
     LaunchedEffect(hasPermission, alarmViewModel.state.items) {
-        alarmViewModel.state.items.forEach { item ->
+        val currentItems = alarmViewModel.state.items
+
+        // 1. 若之前存在的闹钟在当前列表中已被移除（被删除），必须取消其在系统 AlarmManager 中的调度
+        if (previousAlarms.isNotEmpty()) {
+            val currentIds = currentItems.map { it.id }.toSet()
+            previousAlarms.filter { it.id !in currentIds }.forEach { deletedAlarm ->
+                scheduler.cancel(deletedAlarm)
+            }
+        }
+        previousAlarms = currentItems
+
+        // 2. 对当前列表中的闹钟进行定时任务同步
+        currentItems.forEach { item ->
             if (hasPermission && item.onOrOff && !item.isExpired()) {
                 scheduler.scheduler(item)
             } else {
@@ -167,7 +182,10 @@ fun AlarmScreen(
         // 闹钟列表主区域
         AlarmContent(
             state = alarmViewModel.state,
-            deleteAlarm = alarmViewModel::deleteAlarm,
+            deleteAlarm = { alarm ->
+                scheduler.cancel(alarm)
+                alarmViewModel.deleteAlarm(alarm)
+            },
             padding = PaddingValues(0.dp),
             changeAlarmStatus = alarmViewModel::updateAlarmStatus,
             onEditAlarm = { alarm -> editingAlarm = alarm }
